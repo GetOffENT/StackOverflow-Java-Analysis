@@ -1,3 +1,7 @@
 spring:
   application:
     name: backend
+  datasource:
+    url: jdbc:mysql://${stackoverflow.database.host:localhost}:${stackoverflow.database.port:3306}/${stackoverflow.database.database:stackoverflow}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+    username: ${stackoverflow.database.username:root}
+    password: ${stackoverflow.database.password:mysql}
