@@ -27,4 +27,9 @@
 
 ### MySQL数据库
 
-从sql/[table.sql](sql/table.sql)获取建表语句
+[获取](sql/table.sql)建表语句，创建数据库和表。
+
+### 后端
+
+1. 修改 `application.yaml` 中的数据库配置。
+2. 运行 `InitDatabaseTest` 类，解析从 Stack Overflow 获取到的JSON格式[数据](backend/src/main/resources/data)并存储到数据库中。
