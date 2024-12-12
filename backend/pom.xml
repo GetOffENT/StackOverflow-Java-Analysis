@@ -8,12 +8,12 @@
         <version>3.2.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>org.example</groupId>
-    <artifactId>backend</artifactId>
+    <groupId>cn.edu.sustech</groupId>
+    <artifactId>stack-overflow-java-analysis</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>war</packaging>
-    <name>backend</name>
-    <description>backend</description>
+    <name>stack-overflow-java-analysis</name>
+    <description>stack-overflow-java-analysis</description>
     <url/>
     <licenses>
         <license/>

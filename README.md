@@ -57,4 +57,4 @@
        count: <your-count> # 使用api获取问题数据的数量   
    ```
 
-3. 运行 `InitDatabaseTest` 类，自动获取数据并根据配置信息存储到数据库或json文件中。
+3. 运行 `test`下`cn.edu.sustech.stackoverflow.CrawlerTest` 类，自动获取数据并根据配置信息存储到数据库（和json文件）中。
