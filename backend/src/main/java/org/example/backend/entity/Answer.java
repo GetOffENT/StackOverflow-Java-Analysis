@@ -1,7 +1,6 @@
 package org.example.backend.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 
 import java.io.Serial;
@@ -42,17 +41,32 @@ public class Answer implements Serializable {
     @ApiModelProperty("回答者用户ID，逻辑外键")
     private Long ownerUserId;
 
+    @ApiModelProperty("回答内容")
+    private String body;
+
     @ApiModelProperty("是否被接受")
     private Boolean isAccepted;
 
+    @ApiModelProperty("回答的赞同次数")
+    private Integer upVoteCount;
+
+    @ApiModelProperty("回答的反对次数")
+    private Integer downVoteCount;
+
     @ApiModelProperty("回答得分")
     private Integer score;
+
+    @ApiModelProperty("回答的评论数量")
+    private Integer commentCount;
 
     @ApiModelProperty("回答创建时间")
     private LocalDateTime creationDate;
 
     @ApiModelProperty("回答的最后活动时间")
     private LocalDateTime lastActivityDate;
+
+    @ApiModelProperty("回答的最后编辑时间")
+    private LocalDateTime lastEditDate;
 
     @ApiModelProperty("社区拥有的日期")
     private LocalDateTime communityOwnedDate;

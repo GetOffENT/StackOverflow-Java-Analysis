@@ -44,6 +44,9 @@ public class Comment implements Serializable {
     @ApiModelProperty("回复的用户ID（可以为空），逻辑外键")
     private Long replyToUserId;
 
+    @ApiModelProperty("评论内容")
+    private String body;
+
     @ApiModelProperty("是否已编辑")
     private Boolean edited;
 
