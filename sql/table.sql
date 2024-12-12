@@ -40,6 +40,7 @@ CREATE TABLE `question`
     `last_activity_date` datetime COMMENT '问题的最后活动时间',
     `last_edit_date`     datetime COMMENT '问题的最后编辑时间',
     `protected_date`     datetime COMMENT '问题的保护时间',
+    `community_owned_date` datetime COMMENT '社区拥有的日期',
     `content_license`    varchar(50) COMMENT '内容许可',
     PRIMARY KEY (`question_id`)
 ) ENGINE = InnoDB

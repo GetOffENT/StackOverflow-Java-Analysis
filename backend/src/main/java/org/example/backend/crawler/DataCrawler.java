@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.properties.StackOverflowProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -26,6 +27,8 @@ import java.util.Map;
 public class DataCrawler {
 
     private final StackOverflowProperties stackOverflowProperties;
+
+    private final DataProcessor dataProcessor;
 
     private int questionCount;
 
@@ -51,6 +54,7 @@ public class DataCrawler {
     /**
      * 获取问题及其相关信息(包含回答和评论，回答也包含评论)
      */
+    @Transactional(rollbackFor = Exception.class)
     public void getQuestionsWithAnswersAndComments() {
         before();
 
@@ -70,14 +74,14 @@ public class DataCrawler {
         int pageStep = totalPageCount / pageCount;
 
         // 最后一页的问题数量
-        int lastPageSize = count % pageSize;
+        int lastPageSize = count % pageSize == 0 ? pageSize : count % pageSize;
 
 
         String url = "https://api.stackexchange.com/2.3/questions";
         for (int i = 0; i < pageCount; i++) {
             // 随机选择一页
             int page = (int) (Math.random() * pageStep) + i * pageStep;
-            log.info("正在获取第{}页的问题...", page);
+            log.info("正在获取第{}页的问题..., 每页{}个", page, pageSize);
             Map<String, String> params = Map.of(
                     "page", String.valueOf(page),
                     "pagesize", String.valueOf(i == pageCount - 1 ? lastPageSize : pageSize),
@@ -96,22 +100,34 @@ public class DataCrawler {
                 jsonArray.addAll(items);
             }
 
-            System.out.println(jsonObject.getJSONArray("items").getFirst());
-            log.info("获取到问题数量为{}", jsonObject.getJSONArray("items").size());
+            dataProcessor.handleQuestions(items);
         }
 
         log.info("获取问题及其相关信息完成");
         after();
     }
 
+
     private JSONArray jsonArray;
 
+    /**
+     * 获取问题及其相关信息之前的操作
+     */
     private void before() {
+        getQuestionCount();
+
         if (stackOverflowProperties.getSaveToJson()) {
             jsonArray = new JSONArray();
         }
+
+        if (stackOverflowProperties.getSaveToDatabase()) {
+            dataProcessor.initDatabase();
+        }
     }
 
+    /**
+     * 获取问题及其相关信息之后的操作
+     */
     private void after() {
         if (stackOverflowProperties.getSaveToJson()) {
             File file = new File(stackOverflowProperties.getJsonPath());
@@ -119,7 +135,7 @@ public class DataCrawler {
                 JSONObject fileContent = new JSONObject();
                 fileContent.put("items", jsonArray);
 
-                fileWriter.write(JSONObject.toJSONString(fileContent,true));
+                fileWriter.write(JSONObject.toJSONString(fileContent, true));
                 log.info("写入JSON文件成功");
             } catch (IOException e) {
                 log.error("写入文件失败", e);

@@ -86,6 +86,9 @@ public class Question implements Serializable {
     @ApiModelProperty("问题的保护时间")
     private LocalDateTime protectedDate;
 
+    @ApiModelProperty("社区拥有的日期")
+    private LocalDateTime communityOwnedDate;
+
     @ApiModelProperty("内容许可")
     private String contentLicense;
 }
