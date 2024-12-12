@@ -81,7 +81,7 @@ public class DataCrawler {
         for (int i = 0; i < pageCount; i++) {
             // 随机选择一页
             int page = (int) (Math.random() * pageStep) + i * pageStep;
-            log.info("正在获取第{}页的问题..., 每页{}个", page, pageSize);
+            log.info("正在获取第{}页的问题..., 每页{}个, 进度{}/{}", page, pageSize, i + 1, pageCount);
             Map<String, String> params = Map.of(
                     "page", String.valueOf(page),
                     "pagesize", String.valueOf(i == pageCount - 1 ? lastPageSize : pageSize),
