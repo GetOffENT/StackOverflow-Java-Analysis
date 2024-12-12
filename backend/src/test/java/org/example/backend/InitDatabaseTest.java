@@ -3,6 +3,7 @@ package org.example.backend;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.example.backend.crawler.DataCrawler;
 import org.example.backend.entity.*;
 import org.example.backend.mapper.*;
 import org.junit.jupiter.api.Test;
@@ -46,11 +47,21 @@ public class InitDatabaseTest {
     @Autowired
     private CommentMapper commentMapper;
 
+    @Autowired
+    private DataCrawler dataCrawler;
+
     private static final String QUESTION_JSON = "data/question.json";
 
     private static final String ANSWER_JSON = "data/answer.json";
 
     private static final String COMMENT_JSON = "data/comment.json";
+
+
+    @Test
+    public void test(){
+        dataCrawler.getQuestionCount();
+        dataCrawler.getQuestionsWithAnswersAndComments();
+    }
 
     @Test
     public void insertQuestionsFromJson() throws IOException {

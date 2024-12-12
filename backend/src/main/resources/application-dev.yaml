@@ -1,0 +1,17 @@
+stack-overflow:
+  database:
+    host: localhost
+    port: 3306
+    database: stackoverflow
+    username: root
+    password: mysql
+  stack-exchange:
+    client-id: 30383
+    client-secret: Vse503Tr8d3tu7I4GxYx2w((
+    key: rl_HHpU4Eh8GzDZ8D9LiHbpQdg8w
+    save-to-json: true
+    json-path: E:\courses\CS209A-ComputerSystemDesignAndApplicationsA\project\StackOverflow-Java-Analysis\backend\src\main\resources\data\questions.json
+    save-to-database: true
+    count: 155
+    # 这是在Stack Exchange API可视化页面手动指定额外字段后自动生成的
+    filter: "!u.*0Ven9AOUeh_Tj1pjF23m)zZ(06lD"

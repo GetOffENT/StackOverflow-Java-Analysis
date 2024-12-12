@@ -1,7 +1,9 @@
 spring:
+  profiles:
+    active: dev
   application:
     name: backend
   datasource:
-    url: jdbc:mysql://${stackoverflow.database.host:localhost}:${stackoverflow.database.port:3306}/${stackoverflow.database.database:stackoverflow}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
-    username: ${stackoverflow.database.username:root}
-    password: ${stackoverflow.database.password:mysql}
+    url: jdbc:mysql://${stack-overflow.database.host:localhost}:${stack-overflow.database.port:3306}/${stack-overflow.database.database:stackoverflow}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+    username: ${stack-overflow.database.username:root}
+    password: ${stack-overflow.database.password:mysql}

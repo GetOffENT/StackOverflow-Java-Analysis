@@ -116,6 +116,10 @@
             <version>${velocity.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+        </dependency>
 
     </dependencies>
 
