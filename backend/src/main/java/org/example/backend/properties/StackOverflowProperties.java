@@ -31,17 +31,7 @@ public class StackOverflowProperties {
     private String jsonPath;
 
     /**
-     * 是否保存到数据库
-     */
-    private Boolean saveToDatabase;
-
-    /**
      * 获取问题的数量
      */
     private Integer count;
-
-    /**
-     * 过滤器，用于获取问题的详细信息(指定除了默认字段以外的额外字段)
-     */
-    private String filter;
 }

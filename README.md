@@ -31,5 +31,30 @@
 
 ### 后端
 
-1. 修改 `application.yaml` 中的数据库配置。
-2. 运行 `InitDatabaseTest` 类，解析从 Stack Overflow 获取到的JSON格式[数据](backend/src/main/resources/data)并存储到数据库中。
+1. 修改 `application-dev.yaml` 中的数据库配置。
+
+   ```yaml
+   stack-overflow:
+     database:
+       host: <your-database-host>
+       port: <your-database-port>
+       database: <your-database-name>
+       username: <your-database-username>
+       password: <your-database-password>
+   ```
+
+2. 修改 `application-dev.yaml` 中对于使用Stack Overflow Restful Api 的配置
+
+   ```yaml
+   stack-overflow:
+     stack-exchange:
+       client-id: <your-stack-exchange-client-id>
+       client-secret: <your-stack-exchange-client-secret>
+       key: <your-stack-exchange-key>
+       save-to-json: <true-or-false> # 是否保存到json文件
+       json-path: <your-json-path> # 如果保存到json文件，指定json文件绝对路径
+       save-to-database: <true-or-false> # 是否保存到数据库
+       count: <your-count> # 使用api获取问题数据的数量   
+   ```
+
+3. 运行 `InitDatabaseTest` 类，自动获取数据并根据配置信息存储到数据库或json文件中。

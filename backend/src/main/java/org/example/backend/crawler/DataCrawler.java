@@ -89,7 +89,8 @@ public class DataCrawler {
                     "sort", "activity",
                     "tagged", "java",
                     "site", "stackoverflow",
-                    "filter", stackOverflowProperties.getFilter(),
+                    //过滤器，用于获取问题的详细信息(指定除了默认字段以外的额外字段)，我这里是在Stack Exchange API可视化页面手动指定额外字段后自动生成的
+                    "filter", "!u.*0Ven9AOUeh_Tj1pjF23m)zZ(06lD",
                     "key", stackOverflowProperties.getKey()
             );
             String response = OkHttpUtil.get(url, params, null);
@@ -120,9 +121,7 @@ public class DataCrawler {
             jsonArray = new JSONArray();
         }
 
-        if (stackOverflowProperties.getSaveToDatabase()) {
-            dataProcessor.initDatabase();
-        }
+        dataProcessor.initDatabase();
     }
 
     /**
