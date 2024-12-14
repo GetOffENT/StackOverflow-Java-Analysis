@@ -22,26 +22,26 @@ CREATE TABLE `user`
 DROP TABLE IF exists `question`;
 CREATE TABLE `question`
 (
-    `question_id`        bigint unsigned NOT NULL COMMENT '问题ID，唯一标识',
-    `owner_user_id`      bigint COMMENT '提问者用户ID，逻辑外键',
-    `title`              varchar(255) COMMENT '问题标题',
-    `body`               text COMMENT '问题内容',
-    `link`               varchar(255) COMMENT '问题的链接',
-    `is_answered`        boolean COMMENT '是否有回答',
-    `answer_count`       int unsigned COMMENT '问题的回答数量',
-    `accepted_answer_id` bigint unsigned COMMENT '接受的回答ID',
-    `comment_count`      int unsigned COMMENT '问题的评论数量',
-    `view_count`         int unsigned COMMENT '问题的查看次数',
-    `favorite_count`     int unsigned COMMENT '问题的收藏次数',
-    `up_vote_count`      int unsigned COMMENT '问题的赞同次数',
-    `down_vote_count`    int unsigned COMMENT '问题的反对次数',
-    `score`              int COMMENT '问题的得分',
-    `creation_date`      datetime COMMENT '问题创建时间',
-    `last_activity_date` datetime COMMENT '问题的最后活动时间',
-    `last_edit_date`     datetime COMMENT '问题的最后编辑时间',
-    `protected_date`     datetime COMMENT '问题的保护时间',
+    `question_id`          bigint unsigned NOT NULL COMMENT '问题ID，唯一标识',
+    `owner_user_id`        bigint COMMENT '提问者用户ID，逻辑外键',
+    `title`                varchar(255) COMMENT '问题标题',
+    `body`                 text COMMENT '问题内容',
+    `link`                 varchar(255) COMMENT '问题的链接',
+    `is_answered`          boolean COMMENT '是否有回答',
+    `answer_count`         int unsigned COMMENT '问题的回答数量',
+    `accepted_answer_id`   bigint unsigned COMMENT '接受的回答ID',
+    `comment_count`        int unsigned COMMENT '问题的评论数量',
+    `view_count`           int unsigned COMMENT '问题的查看次数',
+    `favorite_count`       int unsigned COMMENT '问题的收藏次数',
+    `up_vote_count`        int unsigned COMMENT '问题的赞同次数',
+    `down_vote_count`      int unsigned COMMENT '问题的反对次数',
+    `score`                int COMMENT '问题的得分',
+    `creation_date`        datetime COMMENT '问题创建时间',
+    `last_activity_date`   datetime COMMENT '问题的最后活动时间',
+    `last_edit_date`       datetime COMMENT '问题的最后编辑时间',
+    `protected_date`       datetime COMMENT '问题的保护时间',
     `community_owned_date` datetime COMMENT '社区拥有的日期',
-    `content_license`    varchar(50) COMMENT '内容许可',
+    `content_license`      varchar(50) COMMENT '内容许可',
     PRIMARY KEY (`question_id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT = '问题信息表';
@@ -91,6 +91,7 @@ CREATE TABLE `tag`
 (
     `tag_id`   bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '标签ID，唯一标识',
     `tag_name` varchar(50)     NOT NULL COMMENT '标签名称',
+    `count`    int unsigned    NOT NULL DEFAULT 0 COMMENT '标签被使用的次数',
     PRIMARY KEY (`tag_id`),
     UNIQUE KEY `unique_tag_name` (`tag_name`)
 ) ENGINE = InnoDB
