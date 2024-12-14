@@ -1,7 +1,10 @@
 package cn.edu.sustech.stackoverflow.service;
 
 import cn.edu.sustech.stackoverflow.entity.Tag;
+import cn.edu.sustech.stackoverflow.entity.vo.TagVO;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +16,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface TagService extends IService<Tag> {
 
+    /**
+     * 获取前n个热门标签
+     *
+     * @param n 前n个
+     * @return 前n个热门标签
+     */
+    List<TagVO> getTopNTags(Integer n);
 }

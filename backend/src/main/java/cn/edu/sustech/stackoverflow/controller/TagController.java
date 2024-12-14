@@ -1,6 +1,6 @@
 package cn.edu.sustech.stackoverflow.controller;
 
-import cn.edu.sustech.stackoverflow.entity.vo.TagTopNVO;
+import cn.edu.sustech.stackoverflow.entity.vo.TagVO;
 import cn.edu.sustech.stackoverflow.result.Result;
 import cn.edu.sustech.stackoverflow.service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,12 +31,12 @@ public class TagController {
     /**
      * 获取前n个热门标签
      *
-     * @param n n
+     * @param n 前n个
      * @return 前n个热门标签
      */
     @GetMapping("/{n}")
     @Operation(summary = "获取前n个热门标签")
-    public Result<List<TagTopNVO>> getTopNTags(@PathVariable Integer n) {
+    public Result<List<TagVO>> getTopNTags(@PathVariable Integer n) {
         log.info("获取前n个热门标签 n:{}", n);
         return Result.success(tagService.getTopNTags(n));
     }

@@ -35,4 +35,7 @@ public class Tag implements Serializable {
 
     @Schema(description = "标签名称")
     private String tagName;
+
+    @Schema(description = "标签被使用次数")
+    private Integer count;
 }
