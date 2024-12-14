@@ -52,6 +52,6 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         // 需要为消息转换器设置一个对象转换器，对象转换器可以将Java对象序列化为JSON对象
         converter.setObjectMapper(new JacksonObjectMapper());
         // 将自己的消息转换器添加到容器中
-        converters.add(3, converter); // 防止与swagger的消息转换器冲突
+        converters.add(1, converter); // 防止与swagger的消息转换器冲突
     }
 }

@@ -4,6 +4,7 @@ import cn.edu.sustech.stackoverflow.entity.Tag;
 import cn.edu.sustech.stackoverflow.entity.vo.TagVO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -17,10 +18,12 @@ import java.util.List;
 public interface TagService extends IService<Tag> {
 
     /**
-     * 获取前n个热门标签
+     * 获取指定时间段内的前n个热门标签
      *
-     * @param n 前n个
+     * @param n     前n个
+     * @param startTime 开始时间
+     * @param endTime   结束时间
      * @return 前n个热门标签
      */
-    List<TagVO> getTopNTags(Integer n);
+    List<TagVO> getTopNTags(Integer n, LocalDateTime startTime, LocalDateTime endTime);
 }
