@@ -92,6 +92,9 @@ public class DataProcessor {
 
             // 插入 answers 数据
             JSONArray answers = item.getJSONArray("answers");
+            if (answers != null&&item.getInteger("answer_count") != answers.size()) {
+                log.info("回答数量不匹配, questionId: {}, answer_count: {}, answers.size: {}", questionId, item.getInteger("answer_count"), answers.size());
+            }
             if (answers != null) {
                 insertAnswers(answers);
             }
@@ -293,6 +296,11 @@ public class DataProcessor {
     private void insertTags(JSONArray tagsArray, Long questionId) {
         for (int j = 0; j < tagsArray.size(); j++) {
             String tagName = tagsArray.getString(j);
+
+            // 由于是根据java标签进行过滤获取问题数据，每个问题都会有java标签，这里直接跳过java标签
+            if ("java".equals(tagName)) {
+                continue;
+            }
 
             // 查找标签是否存在
             Tag tag = tagMapper.selectOne(
