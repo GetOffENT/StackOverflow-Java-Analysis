@@ -1,8 +1,10 @@
+server:
+  port: 8080
 spring:
   profiles:
     active: dev
   application:
-    name: backend
+    name: StackOverflow-Java-Analysis
   datasource:
     url: jdbc:mysql://${stack-overflow.database.host:localhost}:${stack-overflow.database.port:3306}/${stack-overflow.database.database:stackoverflow}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
     username: ${stack-overflow.database.username:root}
