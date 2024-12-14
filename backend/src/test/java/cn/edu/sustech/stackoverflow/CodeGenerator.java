@@ -20,7 +20,7 @@ public class CodeGenerator {
         String projectPath = "E:\\courses\\CS209A-ComputerSystemDesignAndApplicationsA\\project\\StackOverflow-Java-Analysis\\backend" + "/src/main/java";
         String author = "Yuxian Wu";
         String parent = "cn.edu.sustech";
-        String moduleName = "backend";
+        String moduleName = "stackoverflow";
         List<String> tables = List.of("answer", "comment", "question", "question_tag", "tag", "user");
 
         FastAutoGenerator.create("jdbc:mysql://" + host + ":" + port + "/" + database + "?serverTimezone=GMT%2B8", username, password)
@@ -28,7 +28,8 @@ public class CodeGenerator {
                     builder.author(author) // 设置作者
                             .outputDir(projectPath) // 输出目录
                             .disableOpenDir() // 生成后不打开文件夹
-                            .enableSwagger();
+//                            .enableSwagger()
+                            .enableSpringdoc();
 //                            .dateType(DateType.ONLY_DATE); // 设置日期类型
                 })
                 .packageConfig(builder -> {

@@ -7,8 +7,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.Accessors;
 
@@ -25,37 +24,37 @@ import lombok.experimental.Accessors;
 @Data
 @Builder
 @Accessors(chain = true)
-@ApiModel(value = "Comment对象", description = "评论信息表")
+@Schema(name = "Comment", description = "评论信息表")
 public class Comment implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("评论ID，唯一标识")
+    @Schema(description = "评论ID，唯一标识")
     @TableId(value = "comment_id", type = IdType.INPUT)
     private Long commentId;
 
-    @ApiModelProperty("评论的目标（问题ID或回答ID）")
+    @Schema(description = "评论的目标（问题ID或回答ID）")
     private Long postId;
 
-    @ApiModelProperty("评论者用户ID，逻辑外键")
+    @Schema(description = "评论者用户ID，逻辑外键")
     private Long ownerUserId;
 
-    @ApiModelProperty("回复的用户ID（可以为空），逻辑外键")
+    @Schema(description = "回复的用户ID（可以为空），逻辑外键")
     private Long replyToUserId;
 
-    @ApiModelProperty("评论内容")
+    @Schema(description = "评论内容")
     private String body;
 
-    @ApiModelProperty("是否已编辑")
+    @Schema(description = "是否已编辑")
     private Boolean edited;
 
-    @ApiModelProperty("评论得分")
+    @Schema(description = "评论得分")
     private Integer score;
 
-    @ApiModelProperty("评论创建时间")
+    @Schema(description = "评论创建时间")
     private LocalDateTime creationDate;
 
-    @ApiModelProperty("内容许可")
+    @Schema(description = "内容许可")
     private String contentLicense;
 }

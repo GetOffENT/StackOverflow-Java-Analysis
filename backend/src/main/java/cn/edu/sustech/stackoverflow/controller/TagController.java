@@ -1,10 +1,15 @@
 package cn.edu.sustech.stackoverflow.controller;
 
-import io.swagger.annotations.Api;
+import cn.edu.sustech.stackoverflow.entity.vo.TagTopNVO;
+import cn.edu.sustech.stackoverflow.result.Result;
+import cn.edu.sustech.stackoverflow.service.TagService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * <p>
@@ -17,8 +22,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/backend/tag")
 @Slf4j
-@Api(tags = "标签相关接口")
+@Tag(name = "标签相关接口", description = "标签相关接口")
 @RequiredArgsConstructor
 public class TagController {
 
+    private final TagService tagService;
+
+    /**
+     * 获取前n个热门标签
+     *
+     * @param n n
+     * @return 前n个热门标签
+     */
+    @GetMapping("/{n}")
+    @Operation(summary = "获取前n个热门标签")
+    public Result<List<TagTopNVO>> getTopNTags(@PathVariable Integer n) {
+        log.info("获取前n个热门标签 n:{}", n);
+        return Result.success(tagService.getTopNTags(n));
+    }
 }

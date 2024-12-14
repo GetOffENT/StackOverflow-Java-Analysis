@@ -6,8 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serial;
 import java.io.Serializable;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.Accessors;
 
@@ -24,16 +23,16 @@ import lombok.experimental.Accessors;
 @Data
 @Builder
 @Accessors(chain = true)
-@ApiModel(value = "Tag对象", description = "标签信息表")
+@Schema(name = "Tag", description = "标签信息表")
 public class Tag implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("标签ID，唯一标识")
+    @Schema(description = "标签ID，唯一标识")
     @TableId(value = "tag_id", type = IdType.AUTO)
     private Long tagId;
 
-    @ApiModelProperty("标签名称")
+    @Schema(description = "标签名称")
     private String tagName;
 }

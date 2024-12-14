@@ -34,7 +34,7 @@
         <druid.version>1.2.1</druid.version>
         <mysql.version>8.0.30</mysql.version>
         <velocity.version>2.0</velocity.version>
-        <knife4j>3.0.2</knife4j>
+        <knife4j-openapi3-jakarta.version>4.5.0</knife4j-openapi3-jakarta.version>
         <hutool-all>5.8.32</hutool-all>
         <fastjson.version>1.2.83</fastjson.version>
     </properties>
@@ -83,8 +83,8 @@
 
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-spring-boot-starter</artifactId>
-            <version>${knife4j}</version>
+            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+            <version>${knife4j-openapi3-jakarta.version}</version>
         </dependency>
 
         <dependency>

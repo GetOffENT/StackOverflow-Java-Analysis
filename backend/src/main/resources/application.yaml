@@ -7,3 +7,27 @@ spring:
     url: jdbc:mysql://${stack-overflow.database.host:localhost}:${stack-overflow.database.port:3306}/${stack-overflow.database.database:stackoverflow}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
     username: ${stack-overflow.database.username:root}
     password: ${stack-overflow.database.password:mysql}
+
+springdoc:
+  swagger-ui:
+    #自定义swagger前端请求路径,输入http:localhost:8080/swagger-ui.html会自动重定向到swagger页面
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: cn.edu.sustech.stackoverflow
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    swagger-model-name: 实体类列表
+  basic:
+    enable: false
+    username: root
+    password: 123456

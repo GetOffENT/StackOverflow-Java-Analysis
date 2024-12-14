@@ -6,8 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serial;
 import java.io.Serializable;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.Accessors;
 
@@ -24,34 +23,34 @@ import lombok.experimental.Accessors;
 @Data
 @Builder
 @Accessors(chain = true)
-@ApiModel(value = "User对象", description = "用户信息表")
+@Schema(name = "User", description = "用户信息表")
 public class User implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("用户ID，唯一标识")
+    @Schema(description = "用户ID，唯一标识")
     @TableId(value = "user_id", type = IdType.INPUT)
     private Long userId;
 
-    @ApiModelProperty("StackOverflow账户ID")
+    @Schema(description = "StackOverflow账户ID")
     private Long accountId;
 
-    @ApiModelProperty("用户声誉分数")
+    @Schema(description = "用户声誉分数")
     private Integer reputation;
 
-    @ApiModelProperty("用户类型（如：registered）")
+    @Schema(description = "用户类型（如：registered）")
     private String userType;
 
-    @ApiModelProperty("用户接受率（0-100）")
+    @Schema(description = "用户接受率（0-100）")
     private Integer acceptRate;
 
-    @ApiModelProperty("用户头像链接")
+    @Schema(description = "用户头像链接")
     private String profileImage;
 
-    @ApiModelProperty("用户显示名称")
+    @Schema(description = "用户显示名称")
     private String displayName;
 
-    @ApiModelProperty("用户个人主页链接")
+    @Schema(description = "用户个人主页链接")
     private String link;
 }
