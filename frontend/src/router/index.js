@@ -103,16 +103,22 @@ export const constantRoutes = [
         meta: { title: "API Overview" },
         children: [ // 嵌套子路由
           {
-            path: "topicfrequency", // 子路由路径
-            name: "TopicFrequency",
-            component: () => import("@/views/restful/TopicFrequencyPage"), // 新页面组件
-            meta: { title: "Topic Frequency" },
+            path: "toptopicfrequency", // 子路由路径
+            name: "TopTopicFrequency",
+            component: () => import("@/views/restful/TopTopicFrequencyPage"), // 新页面组件
+            meta: { title: "Top Topic Frequency" },
           },
           {
-            path: "bugfrequency", // 子路由路径
-            name: "BugFrequency",
-            component: () => import("@/views/restful/BugFrequencyPage"), // 新页面组件
-            meta: { title: "Bug Frequency" },
+            path: "topbugfrequency", // 子路由路径
+            name: "TopBugFrequency",
+            component: () => import("@/views/restful/TopBugFrequencyPage"), // 新页面组件
+            meta: { title: "Top Bug Frequency" },
+          },
+          {
+            path: "specifictopicfrequency", // 子路由路径
+            name: "SpecificTopicFrequency",
+            component: () => import("@/views/restful/SpecificTopicFrequency"), // 新页面组件
+            meta: { title: "Specific Topic Frequency" },
           },
         ],
       },

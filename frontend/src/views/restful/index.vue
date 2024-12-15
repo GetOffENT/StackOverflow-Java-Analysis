@@ -5,13 +5,18 @@
       <ul>
         <li>
           <!-- 跳转到 Topic Frequency 页面 -->
-          <router-link to="/restful/index/topicfrequency">Topic Frequency</router-link>
-          <span> - query the frequency of a specific topic or query the top N topics sorted by frequency</span> <!-- 添加解释 -->
+          <router-link to="/restful/index/toptopicfrequency">Top Topic Frequency</router-link>
+          <span> - query the top N topics sorted by frequency</span> <!-- 添加解释 -->
+        </li>
+        <li>
+          <!-- 跳转到 Topic Frequency 页面 -->
+          <router-link to="/restful/index/specifictopicfrequency">Specific Topic Frequency</router-link>
+          <span> - query for the frequency of a specific topic </span> <!-- 添加解释 -->
         </li>
         <li>
           <!-- 跳转到 Bug Frequency 页面 -->
-          <router-link to="/restful/index/bugfrequency">Bug Frequency</router-link>
-          <span> - query the frequency of a specific error or exception or query the top N errors or exceptions sorted by frequency</span> <!-- 添加解释 -->
+          <router-link to="/restful/index/topbugfrequency">Top Bug Frequency</router-link>
+          <span> - query the top N errors or exceptions sorted by frequency</span> <!-- 添加解释 -->
         </li>
       </ul>
     </nav>
@@ -21,8 +26,8 @@
 
 <script>
 export default {
-  name: "RestfulIndex",
-};
+  name: 'RestfulIndex'
+}
 </script>
 
 <style>
@@ -52,3 +57,4 @@ span {
   margin-left: 10px;
 }
 </style>
+
