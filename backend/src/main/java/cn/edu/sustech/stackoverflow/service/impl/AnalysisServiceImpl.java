@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -30,8 +31,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AnalysisServiceImpl implements AnalysisService {
 
-    private final TagMapper tagMapper;
-
     private final QuestionMapper questionMapper;
 
     private final AnswerMapper answerMapper;
@@ -48,9 +47,6 @@ public class AnalysisServiceImpl implements AnalysisService {
      */
     @Override
     public ErrorAndExceptionVO getTopNErrorsAndExceptions(Integer n, LocalDateTime start, LocalDateTime end) {
-        // 查询所有标签
-        List<Tag> tags = tagMapper.selectList(null);
-
         // 查询符合时间范围的所有问题
         List<Question> questions = questionMapper.selectList(
                 new LambdaQueryWrapper<Question>()
@@ -75,17 +71,6 @@ public class AnalysisServiceImpl implements AnalysisService {
         // 定义统计结果的 Map
         Map<String, Long> errorCountMap = new HashMap<>();
         Map<String, Long> exceptionCountMap = new HashMap<>();
-
-        // 统计标签中的 error 和 exception
-        tags.forEach(tag -> {
-            String tagName = tag.getTagName().toLowerCase();
-            if (tagName.contains("error")) {
-                errorCountMap.put(tagName, errorCountMap.getOrDefault(tagName, 0L) + 1);
-            }
-            if (tagName.contains("exception")) {
-                exceptionCountMap.put(tagName, exceptionCountMap.getOrDefault(tagName, 0L) + 1);
-            }
-        });
 
         // 统计问题中的 error 和 exception
         questions.forEach(question -> {
@@ -139,24 +124,35 @@ public class AnalysisServiceImpl implements AnalysisService {
      * @param exceptionCountMap 异常统计 Map
      */
     private void countOccurrences(String body, Map<String, Long> errorCountMap, Map<String, Long> exceptionCountMap) {
+
         if (body == null || body.isEmpty()) {
             return;
         }
-        String lowerCaseBody = body.toLowerCase();
 
-        // 使用正则表达式匹配以 'error' 结尾的完整单词
-        Pattern errorPattern = Pattern.compile("\\b\\w*error\\b"); // 匹配以 'error' 结尾的完整单词
-        Matcher errorMatcher = errorPattern.matcher(lowerCaseBody);
+        Pattern errorPattern = Pattern.compile("(?<!\\w)(\\w+Error)(?!\\w)"); // 匹配完整单词，忽略大小写
+        Matcher errorMatcher = errorPattern.matcher(body);
+
+        // 使用 set 去重，保证一个单词只统计一次(在一个body中)
+        HashSet<String> set = new HashSet<>();
         while (errorMatcher.find()) {
-            String errorWord = errorMatcher.group();
+            String errorWord = errorMatcher.group(1); // 获取完整的单词
+            if (set.contains(errorWord)) {
+                continue;
+            }
+            set.add(errorWord);
             errorCountMap.put(errorWord, errorCountMap.getOrDefault(errorWord, 0L) + 1);
         }
 
-        // 使用正则表达式匹配以 'exception' 结尾的完整单词
-        Pattern exceptionPattern = Pattern.compile("\\b\\w*exception\\b"); // 匹配以 'exception' 结尾的完整单词
-        Matcher exceptionMatcher = exceptionPattern.matcher(lowerCaseBody);
+        Pattern exceptionPattern = Pattern.compile("(?<!\\w)(\\w+Exception)(?!\\w)");
+        Matcher exceptionMatcher = exceptionPattern.matcher(body);
+
+        set = new HashSet<>();
         while (exceptionMatcher.find()) {
-            String exceptionWord = exceptionMatcher.group();
+            String exceptionWord = exceptionMatcher.group(1);
+            if (set.contains(exceptionWord)) {
+                continue;
+            }
+            set.add(exceptionWord);
             exceptionCountMap.put(exceptionWord, exceptionCountMap.getOrDefault(exceptionWord, 0L) + 1);
         }
     }
