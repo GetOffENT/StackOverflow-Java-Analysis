@@ -411,12 +411,12 @@ public class AnalysisServiceImpl implements AnalysisService {
                         .le(end != null, Answer::getCreationDate, end)
         );
 
-        // 最多只能返回maxCount条数据, 如果超过maxCount条则随机返回maxCount条
-        int maxCount = 2000;
-        if (answers.size() > maxCount) {
-            Collections.shuffle(answers);
-            answers = answers.subList(0, maxCount);
-        }
+//        // 最多只能返回maxCount条数据, 如果超过maxCount条则随机返回maxCount条
+//        int maxCount = 2000;
+//        if (answers.size() > maxCount) {
+//            Collections.shuffle(answers);
+//            answers = answers.subList(0, maxCount);
+//        }
 
         // 所有用户
         List<User> users = userMapper.selectList(null);
@@ -432,6 +432,33 @@ public class AnalysisServiceImpl implements AnalysisService {
                         .downVoteCount(answer.getDownVoteCount())
                         .isAccepted(answer.getIsAccepted())
                         .reputation(userMap.get(answer.getOwnerUserId()).getReputation())
+                        .build())
+                .toList();
+    }
+
+    /**
+     * 获取指定时间段内回答信息及回答长度
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 回答信息及回答长度
+     */
+    @Override
+    public List<AnswerWithLengthVO> getAnswersWithLength(LocalDateTime start, LocalDateTime end) {
+        // 查询符合时间范围的所有回答
+        List<Answer> answers = answerMapper.selectList(
+                new LambdaQueryWrapper<Answer>()
+                        .ge(start != null, Answer::getCreationDate, start)
+                        .le(end != null, Answer::getCreationDate, end)
+        );
+
+        return answers.stream()
+                .map(answer -> AnswerWithLengthVO.builder()
+                        .answerId(answer.getAnswerId())
+                        .upVoteCount(answer.getUpVoteCount())
+                        .downVoteCount(answer.getDownVoteCount())
+                        .isAccepted(answer.getIsAccepted())
+                        .length(answer.getBody().length())
                         .build())
                 .toList();
     }

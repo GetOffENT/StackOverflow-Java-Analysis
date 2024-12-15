@@ -192,4 +192,21 @@ public class AnalysisController {
         log.info("获取指定时间段内回答简略信息及回答用户声望 start:{} end:{}", start, end);
         return Result.success(analysisService.getAnswersWithUserReputation(start, end));
     }
+
+    /**
+     * 获取指定时间段内回答简略信息及答案长度信息
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 回答简略信息及答案长度列表
+     */
+    @GetMapping("/answer-quality/length")
+    @Operation(summary = "获取指定时间段内回答简略信息及答案长度信息")
+    public Result<List<AnswerWithLengthVO>> getAnswersWithLength(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
+    ) {
+        log.info("获取指定时间段内回答简略信息及答案长度信息 start:{} end:{}", start, end);
+        return Result.success(analysisService.getAnswersWithLength(start, end));
+    }
 }
