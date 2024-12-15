@@ -2,10 +2,7 @@ package cn.edu.sustech.stackoverflow.service.impl;
 
 import cn.edu.sustech.stackoverflow.entity.*;
 import cn.edu.sustech.stackoverflow.entity.dto.TopicByEngagementQueryDTO;
-import cn.edu.sustech.stackoverflow.entity.vo.ErrorAndExceptionVO;
-import cn.edu.sustech.stackoverflow.entity.vo.ErrorVO;
-import cn.edu.sustech.stackoverflow.entity.vo.ExceptionVO;
-import cn.edu.sustech.stackoverflow.entity.vo.TopicByEngagementVO;
+import cn.edu.sustech.stackoverflow.entity.vo.*;
 import cn.edu.sustech.stackoverflow.mapper.*;
 import cn.edu.sustech.stackoverflow.service.AnalysisService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -298,6 +295,47 @@ public class AnalysisServiceImpl implements AnalysisService {
                 .sorted((a, b) -> Double.compare(b.getScore(), a.getScore()))
                 .limit(topicByEngagementQueryDTO.getN())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取指定时间段内回答信息及回答用户声望
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 回答信息及回答用户声望
+     */
+    @Override
+    public List<AnswerWithUserReputationVO> getAnswersWithUserReputation(LocalDateTime start, LocalDateTime end) {
+        // 查询符合时间范围的所有回答
+        List<Answer> answers = answerMapper.selectList(
+                new LambdaQueryWrapper<Answer>()
+                        .ge(start != null, Answer::getCreationDate, start)
+                        .le(end != null, Answer::getCreationDate, end)
+        );
+
+        // 最多只能返回maxCount条数据, 如果超过maxCount条则随机返回maxCount条
+        int maxCount = 2000;
+        if (answers.size() > maxCount) {
+            Collections.shuffle(answers);
+            answers = answers.subList(0, maxCount);
+        }
+
+        // 所有用户
+        List<User> users = userMapper.selectList(null);
+
+        // userId -> User 的映射map
+        Map<Long, User> userMap = users.stream().collect(Collectors.toMap(User::getUserId, user -> user));
+
+        return answers.stream()
+                .filter(answer -> answer.getOwnerUserId() != null)
+                .map(answer -> AnswerWithUserReputationVO.builder()
+                        .answerId(answer.getAnswerId())
+                        .upVoteCount(answer.getUpVoteCount())
+                        .downVoteCount(answer.getDownVoteCount())
+                        .isAccepted(answer.getIsAccepted())
+                        .reputation(userMap.get(answer.getOwnerUserId()).getReputation())
+                        .build())
+                .toList();
     }
 
     /**

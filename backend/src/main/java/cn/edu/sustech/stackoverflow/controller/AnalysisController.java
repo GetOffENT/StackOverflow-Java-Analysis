@@ -1,6 +1,7 @@
 package cn.edu.sustech.stackoverflow.controller;
 
 import cn.edu.sustech.stackoverflow.entity.dto.TopicByEngagementQueryDTO;
+import cn.edu.sustech.stackoverflow.entity.vo.AnswerWithUserReputationVO;
 import cn.edu.sustech.stackoverflow.entity.vo.ErrorAndExceptionVO;
 import cn.edu.sustech.stackoverflow.entity.vo.TopicByEngagementVO;
 import cn.edu.sustech.stackoverflow.entity.vo.TopicVO;
@@ -126,4 +127,20 @@ public class AnalysisController {
         return Result.success(analysisService.getTopNErrorsAndExceptions(n, start, end));
     }
 
+    /**
+     * 获取指定时间段内所有回答简略信息及回答用户声望
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 所有回答简略信息及回答用户声望
+     */
+    @GetMapping("/answer-quality/reputation")
+    @Operation(summary = "获取指定时间段内所有回答简略信息及回答用户声望")
+    public Result<List<AnswerWithUserReputationVO>> getAnswersWithUserReputation(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
+    ) {
+        log.info("获取指定时间段内所有回答简略信息及回答用户声望 start:{} end:{}", start, end);
+        return Result.success(analysisService.getAnswersWithUserReputation(start, end));
+    }
 }
