@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,9 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             List<Question> questions = questionMapper.selectList(queryWrapper);
 
             List<Long> questionIds = questions.stream().map(Question::getQuestionId).toList();
+            if (questionIds.isEmpty()) {
+                return List.of();
+            }
             List<QuestionTag> questionTags = questionTagMapper.selectList(
                     new LambdaQueryWrapper<QuestionTag>()
                             .in(QuestionTag::getQuestionId, questionIds)
@@ -88,6 +92,9 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
             // tagId, 并去重
             List<Long> tagIds = questionTags.stream().map(QuestionTag::getTagId).distinct().toList();
+            if (tagIds.isEmpty()) {
+                return List.of();
+            }
             List<Tag> tags = tagMapper.selectList(
                     new LambdaQueryWrapper<Tag>()
                             .in(Tag::getTagId, tagIds)
@@ -109,5 +116,57 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         } else {
             return tagVOS;
         }
+    }
+
+    /**
+     * 获取指定时间段内race chart数据(一年一次)
+     *
+     * @param n     前n名
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return race chart数据
+     */
+    @Override
+    public List<TagVO> getRaceChartData(Integer n, LocalDateTime start, LocalDateTime end) {
+        if (start == null || end == null) {
+            List<Question> questions = questionMapper.selectList(null);
+
+            LocalDateTime min = questions.getFirst().getCreationDate();
+            LocalDateTime max = questions.getFirst().getCreationDate();
+            for (Question question : questions) {
+                if (question.getCreationDate().isBefore(min)) {
+                    min = question.getCreationDate();
+                }
+                if (question.getCreationDate().isAfter(max)) {
+                    max = question.getCreationDate();
+                }
+            }
+            if (start == null) {
+                start = min;
+            }
+            if (end == null) {
+                end = max;
+            }
+        }
+
+        // 只取start和end的年份
+        start = LocalDateTime.of(start.getYear(), 1, 1, 0, 0);
+        end = LocalDateTime.of(end.getYear(), 1, 1, 0, 0);
+
+        List<TagVO> tagVOList = new ArrayList<>();
+
+        // 一月一次调用getTopNTags函数，获取每年的topN标签
+        while (start.isBefore(end)) {
+            LocalDateTime finalStart = start;
+            LocalDateTime finalEnd = start.plusYears(1);
+            List<TagVO> tagVOS = getTopNTags(n, finalStart, finalEnd);
+            tagVOS.forEach(tagVO -> tagVO.setTime(finalStart));
+
+            tagVOList.addAll(tagVOS);
+
+            start = finalEnd;
+        }
+
+        return tagVOList;
     }
 }

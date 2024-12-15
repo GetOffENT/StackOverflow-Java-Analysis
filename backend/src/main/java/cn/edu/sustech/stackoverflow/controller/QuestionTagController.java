@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2024-12-11
  */
 @RestController
-@RequestMapping("/backend/question-tag")
+@RequestMapping("/question-tag")
 @Slf4j
 @Tag(name = "问题标签相关接口", description = "问题标签相关接口")
 @RequiredArgsConstructor

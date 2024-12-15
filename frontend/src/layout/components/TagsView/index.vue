@@ -94,7 +94,7 @@ export default {
       return tags
     },
     initTags() {
-      const affixTags = this.affixTags = this.filterAffixTags(this.routes)
+      const affixTags = this.affixTags = this.filterAffixTags(this.$router.options.routes)
       for (const tag of affixTags) {
         // Must have tag name
         if (tag.name) {
