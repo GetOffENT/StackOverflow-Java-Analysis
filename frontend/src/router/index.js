@@ -114,6 +114,12 @@ export const constantRoutes = [
             component: () => import("@/views/restful/TopBugFrequencyPage"), // 新页面组件
             meta: { title: "Top Bug Frequency" },
           },
+          {
+            path: "specifictopicfrequency", // 子路由路径
+            name: "SpecificTopicFrequency",
+            component: () => import("@/views/restful/SpecificTopicFrequency"), // 新页面组件
+            meta: { title: "Specific Topic Frequency" },
+          },
         ],
       },
     ]
