@@ -18,6 +18,14 @@ import java.util.List;
 public interface TagService extends IService<Tag> {
 
     /**
+     * 根据标签名获取对应标签数据
+     *
+     * @param tagName 标签名
+     * @return 对应标签数据
+     */
+    TopicVO getTopicByTagName(String tagName);
+
+    /**
      * 获取指定时间段内的前n个热门标签
      *
      * @param n     前n个

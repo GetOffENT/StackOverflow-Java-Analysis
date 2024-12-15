@@ -41,6 +41,30 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
 
     /**
+     * 根据标签名获取对应标签数据
+     *
+     * @param tagName 标签名
+     * @return 对应标签数据
+     */
+    @Override
+    public TopicVO getTopicByTagName(String tagName) {
+
+        Long total = questionTagMapper.selectCount(null);
+        Tag tag = tagMapper.selectOne(
+                new LambdaQueryWrapper<Tag>().eq(Tag::getTagName, tagName)
+        );
+        if (tag == null) {
+            return null;
+        }
+        return TopicVO.builder()
+                .tagId(tag.getTagId())
+                .tagName(tag.getTagName())
+                .count(tag.getCount())
+                .percentage((double) tag.getCount() / total)
+                .build();
+    }
+
+    /**
      * 获取指定时间段内的前n个热门标签
      *
      * @param n     前n个

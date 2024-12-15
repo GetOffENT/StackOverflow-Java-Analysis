@@ -40,6 +40,20 @@ public class AnalysisController {
 
     private final TagService tagService;
 
+
+    /**
+     * 根据标签名获取对应标签数据
+     *
+     * @param tagName 标签名
+     * @return 对应标签数据
+     */
+    @GetMapping("/topic")
+    @Operation(summary = "根据标签名获取对应标签数据")
+    public Result<TopicVO> getTopicByTagName (@RequestParam String tagName) {
+        log.info("根据标签名获取对应标签数据 tagName:{}", tagName);
+        return Result.success(tagService.getTopicByTagName(tagName));
+    }
+
     /**
      * 获取指定时间段内的前n个热门标签
      *
