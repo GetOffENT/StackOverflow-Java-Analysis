@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function getTopNTopics(data) {
   return request({
-    url: "/tag/top",
+    url: "/analysis/top",
     method: "get",
     params: data
   })
@@ -10,7 +10,7 @@ export function getTopNTopics(data) {
 
 export function getRaceChartData(data) {
   return request({
-    url: "/tag/race",
+    url: "/analysis/race",
     method: "get",
     params: data
   })
