@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.DispatcherServlet;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -53,5 +54,17 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         converter.setObjectMapper(new JacksonObjectMapper());
         // 将自己的消息转换器添加到容器中
         converters.add(1, converter); // 防止与swagger的消息转换器冲突
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                //是否发送Cookie
+                .allowCredentials(true)
+                //放行哪些原始域
+                .allowedOrigins("http://localhost:9528")
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedHeaders("*")
+                .exposedHeaders("*");
     }
 }
