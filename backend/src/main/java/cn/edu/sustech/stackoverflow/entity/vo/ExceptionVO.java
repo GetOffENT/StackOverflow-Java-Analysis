@@ -1,10 +1,8 @@
 package cn.edu.sustech.stackoverflow.entity.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 /**
  * <p>
@@ -14,18 +12,10 @@ import lombok.NoArgsConstructor;
  * @version 1.0
  * @since 2024-12-15 10:09
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-@Builder
-@NoArgsConstructor
+@SuperBuilder
 @AllArgsConstructor
 @Schema(name = "ExceptionVO", description = "TopN异常")
-public class ExceptionVO {
-    @Schema(description = "异常名")
-    private String name;
-
-    @Schema(description = "异常次数")
-    private Long count;
-
-    @Schema(description = "异常出现百分比")
-    private Double percentage;
+public class ExceptionVO extends ThrowableVO{
 }

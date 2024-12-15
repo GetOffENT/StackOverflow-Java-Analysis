@@ -24,8 +24,8 @@ import java.util.List;
 public class ErrorAndExceptionVO {
 
     @Schema(description = "错误")
-    List<ErrorVO> errors;
+    List<ThrowableVO> errors;
 
     @Schema(description = "异常")
-    List<ExceptionVO> exceptions;
+    List<ThrowableVO> exceptions;
 }

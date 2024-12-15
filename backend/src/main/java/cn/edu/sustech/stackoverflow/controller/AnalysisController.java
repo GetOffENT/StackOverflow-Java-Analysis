@@ -116,13 +116,14 @@ public class AnalysisController {
      */
     @GetMapping("/error-and-exception/top")
     @Operation(summary = "获取前n个被高频讨论的错误和异常", description = "获取前n个被高频讨论的错误和异常")
-    public Result<ErrorAndExceptionVO> getTopNErrorsAndExceptions(
+    public Result<Object> getTopNErrorsAndExceptions(
             @RequestParam Integer n,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end,
+            @RequestParam(required = false) Boolean mixed
     ) {
         log.info("获取前n个被讨论的高频错误和异常 n:{}", n);
-        return Result.success(analysisService.getTopNErrorsAndExceptions(n, start, end));
+        return Result.success(analysisService.getTopNErrorsAndExceptions(n, start, end, mixed));
     }
 
     /**

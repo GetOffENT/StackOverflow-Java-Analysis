@@ -24,7 +24,7 @@ public interface AnalysisService {
      * @param end   结束时间
      * @return 前n个被高频讨论的错误和异常
      */
-    ErrorAndExceptionVO getTopNErrorsAndExceptions(Integer n, LocalDateTime start, LocalDateTime end);
+    Object getTopNErrorsAndExceptions(Integer n, LocalDateTime start, LocalDateTime end, Boolean mixed);
 
     /**
      * 获取指定时间段内用户声望高的用户参与度最高的n个话题

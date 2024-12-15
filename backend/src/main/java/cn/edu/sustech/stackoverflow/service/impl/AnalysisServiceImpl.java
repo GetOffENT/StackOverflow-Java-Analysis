@@ -51,7 +51,7 @@ public class AnalysisServiceImpl implements AnalysisService {
      * @return 前n个被高频讨论的错误和异常
      */
     @Override
-    public ErrorAndExceptionVO getTopNErrorsAndExceptions(Integer n, LocalDateTime start, LocalDateTime end) {
+    public Object getTopNErrorsAndExceptions(Integer n, LocalDateTime start, LocalDateTime end, Boolean mixed) {
         // 查询符合时间范围的所有问题
         List<Question> questions = questionMapper.selectList(
                 new LambdaQueryWrapper<Question>()
@@ -93,8 +93,25 @@ public class AnalysisServiceImpl implements AnalysisService {
         long totalErrorCount = errorCountMap.values().stream().mapToLong(Long::longValue).sum();
         long totalExceptionCount = exceptionCountMap.values().stream().mapToLong(Long::longValue).sum();
 
+        if (mixed) {
+            // 合并错误和异常的计数
+            Map<String, Long> mixedCountMap = new HashMap<>();
+            long totalMixedCount = totalErrorCount + totalExceptionCount;
+            errorCountMap.forEach((key, value) -> mixedCountMap.put(key, mixedCountMap.getOrDefault(key, 0L) + value));
+            exceptionCountMap.forEach((key, value) -> mixedCountMap.put(key, mixedCountMap.getOrDefault(key, 0L) + value));
+            return mixedCountMap.entrySet().stream()
+                            .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
+                            .limit(n)
+                            .map(entry -> ThrowableVO.builder()
+                                    .name(entry.getKey())
+                                    .count(entry.getValue())
+                                    .percentage(totalMixedCount > 0 ? entry.getValue() * 100.0 / totalMixedCount : 0.0)
+                                    .build())
+                            .collect(Collectors.toList());
+        }
+
         // 构建错误和异常的列表
-        List<ErrorVO> errors = errorCountMap.entrySet().stream()
+        List<ThrowableVO> errors = errorCountMap.entrySet().stream()
                 .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
                 .limit(n)
                 .map(entry -> ErrorVO.builder()
@@ -104,7 +121,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                         .build())
                 .collect(Collectors.toList());
 
-        List<ExceptionVO> exceptions = exceptionCountMap.entrySet().stream()
+        List<ThrowableVO> exceptions = exceptionCountMap.entrySet().stream()
                 .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
                 .limit(n)
                 .map(entry -> ExceptionVO.builder()

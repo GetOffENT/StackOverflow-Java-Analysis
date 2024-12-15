@@ -18,7 +18,7 @@
         />
       </el-form-item>
       <!-- 显示数量输入框 -->
-      <el-form-item label="显示数量">
+      <el-form-item label="count">
         <el-input-number
           v-model="topN"
           :min="1"
@@ -29,20 +29,20 @@
 
       <!-- 查询按钮 -->
       <el-form-item>
-        <el-button type="primary" @click="search">查询</el-button>
+        <el-button type="primary" @click="search">query</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="startRaceChart">播放</el-button>
+        <el-button type="primary" @click="startRaceChart">play</el-button>
       </el-form-item>
     </el-form>
 
     <div class="chart-type-select">
-      <el-tooltip content="词云" placement="top">
+      <el-tooltip content="word cloud" placement="top">
         <div class="ciyun" @click="cloudChart">
           <svg-icon icon-class="ciyun" />
         </div>
       </el-tooltip>
-      <el-tooltip content="水平柱状图" placement="top">
+      <el-tooltip content="horizontal bar chart" placement="top">
         <div class="horizontal-bar-chart" @click="staticChart">
           <svg-icon icon-class="horizontal-bar-chart" />
         </div>
