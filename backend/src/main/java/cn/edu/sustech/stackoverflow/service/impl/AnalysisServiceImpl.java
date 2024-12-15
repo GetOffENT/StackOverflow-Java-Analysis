@@ -9,11 +9,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 
 /**
  * <p>
@@ -295,6 +298,101 @@ public class AnalysisServiceImpl implements AnalysisService {
                 .sorted((a, b) -> Double.compare(b.getScore(), a.getScore()))
                 .limit(topicByEngagementQueryDTO.getN())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取指定时间段内最先发布的回答信息及创建时间信息
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 最先发布的回答信息及创建时间信息
+     */
+    @Override
+    public List<AnswerWithCreateDateVO> getFirstAnswersWithCreateDate(LocalDateTime start, LocalDateTime end) {
+        return getAnswersByCondition(true, false, start, end);
+    }
+
+    /**
+     * 获取指定时间段内被接受的回答信息及创建时间信息
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 被接受的回答信息及创建时间信息
+     */
+    @Override
+    public List<AnswerWithCreateDateVO> getAcceptedAnswersWithCreateDate(LocalDateTime start, LocalDateTime end) {
+        return getAnswersByCondition(false, true, start, end);
+    }
+
+    /**
+     * 获取指定时间段内回答信息及创建时间信息
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 回答信息及创建时间信息
+     */
+    @Override
+    public List<AnswerWithCreateDateVO> getAnswersWithCreateDate(LocalDateTime start, LocalDateTime end) {
+        return getAnswersByCondition(false, false, start, end);
+    }
+
+    public List<AnswerWithCreateDateVO> getAnswersByCondition(boolean first, boolean accepted, LocalDateTime start, LocalDateTime end) {
+        // 查询符合时间范围的所有回答
+        List<Answer> answers = answerMapper.selectList(
+                new LambdaQueryWrapper<Answer>()
+                        .ge(start != null, Answer::getCreationDate, start)
+                        .le(end != null, Answer::getCreationDate, end)
+        );
+
+        Set<Long> questionIds = answers.stream().map(Answer::getQuestionId).collect(Collectors.toSet());
+
+        List<Question> questions = questionMapper.selectList(
+                new LambdaQueryWrapper<Question>()
+                        .in(Question::getQuestionId, questionIds)
+        );
+
+        // questionId -> Question 的映射map
+        Map<Long, Question> questionMap = questions.stream().collect(Collectors.toMap(Question::getQuestionId, question -> question));
+
+        Stream<List<AnswerWithCreateDateVO>> stream = answers.stream()
+                .filter(answer -> questionMap.containsKey(answer.getQuestionId()))
+                .map(answer -> AnswerWithCreateDateVO.builder()
+                        .answerId(answer.getAnswerId())
+                        .isAccepted(answer.getIsAccepted())
+                        .upVoteCount(answer.getUpVoteCount())
+                        .downVoteCount(answer.getDownVoteCount())
+                        .answerCreateDate(answer.getCreationDate())
+                        .duration(Duration.between(questionMap.get(answer.getQuestionId()).getCreationDate(), answer.getCreationDate()).toMillis())
+                        .questionId(answer.getQuestionId())
+                        .questionCreateDate(questionMap.get(answer.getQuestionId()).getCreationDate())
+                        .build())
+                // 按照questionId分组，每组按answerCreateDate-questionCreationDate升序排序;
+                .collect(Collectors.groupingBy(
+                        AnswerWithCreateDateVO::getQuestionId,
+                        Collectors.collectingAndThen(
+                                Collectors.toList(),
+                                list -> {
+                                    List<AnswerWithCreateDateVO> sortedList = list.stream()
+                                            .sorted(Comparator.comparing(AnswerWithCreateDateVO::getDuration))
+                                            .toList();
+
+                                    // 给分组后的的第一个元素设置boolean first以及给每个元素根据index/size设置percentage
+                                    int size = sortedList.size();
+                                    for (int i = 0; i < size; i++) {
+                                        sortedList.get(i).setFirst(i == 0);
+                                    }
+                                    return sortedList;
+                                }
+                        )
+                )).values().stream();
+
+        if (first) {
+            return stream.map(List::getFirst).toList();
+        }
+        if (accepted) {
+            return stream.flatMap(List::stream).filter(AnswerWithCreateDateVO::getIsAccepted).toList();
+        }
+        return stream.flatMap(List::stream).toList();
     }
 
     /**

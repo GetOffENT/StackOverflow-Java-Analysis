@@ -1,10 +1,7 @@
 package cn.edu.sustech.stackoverflow.controller;
 
 import cn.edu.sustech.stackoverflow.entity.dto.TopicByEngagementQueryDTO;
-import cn.edu.sustech.stackoverflow.entity.vo.AnswerWithUserReputationVO;
-import cn.edu.sustech.stackoverflow.entity.vo.ErrorAndExceptionVO;
-import cn.edu.sustech.stackoverflow.entity.vo.TopicByEngagementVO;
-import cn.edu.sustech.stackoverflow.entity.vo.TopicVO;
+import cn.edu.sustech.stackoverflow.entity.vo.*;
 import cn.edu.sustech.stackoverflow.result.Result;
 import cn.edu.sustech.stackoverflow.service.AnalysisService;
 import cn.edu.sustech.stackoverflow.service.TagService;
@@ -50,7 +47,7 @@ public class AnalysisController {
      */
     @GetMapping("/topic")
     @Operation(summary = "根据标签名获取对应标签数据")
-    public Result<TopicVO> getTopicByTagName (@RequestParam String tagName) {
+    public Result<TopicVO> getTopicByTagName(@RequestParam String tagName) {
         log.info("根据标签名获取对应标签数据 tagName:{}", tagName);
         return Result.success(tagService.getTopicByTagName(tagName));
     }
@@ -76,9 +73,10 @@ public class AnalysisController {
 
     /**
      * 获取指定时间段内race chart数据(一年一次)
-     * @param n 前n名
+     *
+     * @param n     前n名
      * @param start 开始时间
-     * @param end 结束时间
+     * @param end   结束时间
      * @return race chart数据
      */
     @GetMapping("/topic/race")
@@ -128,19 +126,70 @@ public class AnalysisController {
     }
 
     /**
-     * 获取指定时间段内所有回答简略信息及回答用户声望
+     * 获取指定时间段内最先发布的回答信息及创建时间信息
      *
      * @param start 开始时间
      * @param end   结束时间
-     * @return 所有回答简略信息及回答用户声望
+     * @return 最先发布的回答信息及创建时间信息
+     */
+    @GetMapping("/answer-quality/create-date/first")
+    @Operation(summary = "获取指定时间段内最先发布的回答信息及创建时间信息")
+    public Result<List<AnswerWithCreateDateVO>> getFirstAnswersWithCreateDate(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
+    ) {
+        log.info("获取指定时间段内最先发布的回答信息及创建时间信息 start:{} end:{}", start, end);
+        return Result.success(analysisService.getFirstAnswersWithCreateDate(start, end));
+    }
+
+    /**
+     * 获取指定时间段内被接受的回答信息及创建时间信息
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 被接受的回答信息及创建时间信息
+     */
+    @GetMapping("/answer-quality/create-date/accepted")
+    @Operation(summary = "获取指定时间段内被接受的回答信息及创建时间信息")
+    public Result<List<AnswerWithCreateDateVO>> getAcceptedAnswersWithCreateDate(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
+    ) {
+        log.info("获取指定时间段内被接受的回答信息及创建时间信息 start:{} end:{}", start, end);
+        return Result.success(analysisService.getAcceptedAnswersWithCreateDate(start, end));
+    }
+
+    /**
+     * 获取指定时间段内回答信息及创建时间信息
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 回答信息及创建时间信息
+     */
+    @GetMapping("/answer-quality/create-date/all")
+    @Operation(summary = "获取指定时间段内回答信息及创建时间信息")
+    public Result<List<AnswerWithCreateDateVO>> getAnswersWithCreateDate(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
+    ) {
+        log.info("获取指定时间段内回答信息及创建时间信息 start:{} end:{}", start, end);
+        return Result.success(analysisService.getAnswersWithCreateDate(start, end));
+    }
+
+    /**
+     * 获取指定时间段内回答简略信息及回答用户声望
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 回答简略信息及回答用户声望列表
      */
     @GetMapping("/answer-quality/reputation")
-    @Operation(summary = "获取指定时间段内所有回答简略信息及回答用户声望")
+    @Operation(summary = "获取指定时间段内回答简略信息及回答用户声望")
     public Result<List<AnswerWithUserReputationVO>> getAnswersWithUserReputation(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
     ) {
-        log.info("获取指定时间段内所有回答简略信息及回答用户声望 start:{} end:{}", start, end);
+        log.info("获取指定时间段内回答简略信息及回答用户声望 start:{} end:{}", start, end);
         return Result.success(analysisService.getAnswersWithUserReputation(start, end));
     }
 }

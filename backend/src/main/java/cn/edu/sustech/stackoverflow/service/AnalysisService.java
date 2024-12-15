@@ -1,6 +1,7 @@
 package cn.edu.sustech.stackoverflow.service;
 
 import cn.edu.sustech.stackoverflow.entity.dto.TopicByEngagementQueryDTO;
+import cn.edu.sustech.stackoverflow.entity.vo.AnswerWithCreateDateVO;
 import cn.edu.sustech.stackoverflow.entity.vo.AnswerWithUserReputationVO;
 import cn.edu.sustech.stackoverflow.entity.vo.ErrorAndExceptionVO;
 import cn.edu.sustech.stackoverflow.entity.vo.TopicByEngagementVO;
@@ -35,6 +36,34 @@ public interface AnalysisService {
      * @return 用户声望高的用户参与度最高的n个话题
      */
     List<TopicByEngagementVO> getTopNTopicsByEngagementOfUserWithHigherReputation(TopicByEngagementQueryDTO topicByEngagementQueryDTO);
+
+    /**
+     * 获取指定时间段内最先发布的回答信息及创建时间信息
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 最先发布的回答信息及创建时间信息
+     */
+    List<AnswerWithCreateDateVO> getFirstAnswersWithCreateDate(LocalDateTime start, LocalDateTime end);
+
+    /**
+     * 获取指定时间段内被接受的回答信息及创建时间信息
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 被接受的回答信息及创建时间信息
+     */
+    List<AnswerWithCreateDateVO> getAcceptedAnswersWithCreateDate(LocalDateTime start, LocalDateTime end);
+
+
+    /**
+     * 获取指定时间段内回答信息及创建时间信息
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 回答信息及创建时间信息
+     */
+    List<AnswerWithCreateDateVO> getAnswersWithCreateDate(LocalDateTime start, LocalDateTime end);
 
     /**
      * 获取指定时间段内回答信息及回答用户声望
