@@ -105,13 +105,13 @@ export const constantRoutes = [
           {
             path: "toptopicfrequency", // 子路由路径
             name: "TopTopicFrequency",
-            component: () => import("@/views/restful/TopicFrequencyPage"), // 新页面组件
+            component: () => import("@/views/restful/TopTopicFrequencyPage"), // 新页面组件
             meta: { title: "Top Topic Frequency" },
           },
           {
             path: "topbugfrequency", // 子路由路径
             name: "TopBugFrequency",
-            component: () => import("@/views/restful/BugFrequencyPage"), // 新页面组件
+            component: () => import("@/views/restful/TopBugFrequencyPage"), // 新页面组件
             meta: { title: "Top Bug Frequency" },
           },
         ],
