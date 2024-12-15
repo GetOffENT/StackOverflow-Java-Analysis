@@ -1,7 +1,9 @@
 package cn.edu.sustech.stackoverflow.controller;
 
+import cn.edu.sustech.stackoverflow.entity.dto.TopicByEngagementQueryDTO;
 import cn.edu.sustech.stackoverflow.entity.vo.ErrorAndExceptionVO;
-import cn.edu.sustech.stackoverflow.entity.vo.TagVO;
+import cn.edu.sustech.stackoverflow.entity.vo.TopicByEngagementVO;
+import cn.edu.sustech.stackoverflow.entity.vo.TopicVO;
 import cn.edu.sustech.stackoverflow.result.Result;
 import cn.edu.sustech.stackoverflow.service.AnalysisService;
 import cn.edu.sustech.stackoverflow.service.TagService;
@@ -9,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,7 +50,7 @@ public class AnalysisController {
      */
     @GetMapping("/topic/top")
     @Operation(summary = "获取前n个热门标签")
-    public Result<List<TagVO>> getTopNTags(
+    public Result<List<TopicVO>> getTopNTags(
             @RequestParam Integer n,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
@@ -65,13 +68,29 @@ public class AnalysisController {
      */
     @GetMapping("/topic/race")
     @Operation(summary = "获取指定时间段内race chart数据(一年一次)")
-    public Result<List<TagVO>> getRaceChartData(
+    public Result<List<TopicVO>> getRaceChartData(
             @RequestParam Integer n,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
     ) {
         log.info("获取指定时间段内race chart数据(一年一次) n:{}", n);
         return Result.success(tagService.getRaceChartData(n, start, end));
+    }
+
+
+    /**
+     * 获取指定时间段内用户声望高的用户参与度最高的n个话题
+     *
+     * @param topicByEngagementQueryDTO 查询参数
+     * @return 用户声望高的用户参与度最高的n个话题
+     */
+    @GetMapping("/topic/engagement/top")
+    @Operation(summary = "获取指定时间段内用户声望高的用户参与度最高的n个话题")
+    public Result<List<TopicByEngagementVO>> getTopNTopicsByEngagementOfUserWithHigherReputation(
+            @ParameterObject TopicByEngagementQueryDTO topicByEngagementQueryDTO
+    ) {
+        log.info("获取指定时间段内用户声望高的用户参与度最高的n个话题 查询参数:{}", topicByEngagementQueryDTO);
+        return Result.success(analysisService.getTopNTopicsByEngagementOfUserWithHigherReputation(topicByEngagementQueryDTO));
     }
 
     /**

@@ -3,7 +3,7 @@ package cn.edu.sustech.stackoverflow.service.impl;
 import cn.edu.sustech.stackoverflow.entity.Question;
 import cn.edu.sustech.stackoverflow.entity.QuestionTag;
 import cn.edu.sustech.stackoverflow.entity.Tag;
-import cn.edu.sustech.stackoverflow.entity.vo.TagVO;
+import cn.edu.sustech.stackoverflow.entity.vo.TopicVO;
 import cn.edu.sustech.stackoverflow.mapper.QuestionMapper;
 import cn.edu.sustech.stackoverflow.mapper.QuestionTagMapper;
 import cn.edu.sustech.stackoverflow.service.TagService;
@@ -49,9 +49,9 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
      * @return 前n个热门标签
      */
     @Override
-    public List<TagVO> getTopNTags(Integer n, LocalDateTime startTime, LocalDateTime endTime) {
+    public List<TopicVO> getTopNTags(Integer n, LocalDateTime startTime, LocalDateTime endTime) {
 
-        List<TagVO> tagVOS;
+        List<TopicVO> topicVOS;
         if (startTime == null && endTime == null) {
             List<Tag> tagList = tagMapper.selectList(null);
 
@@ -60,9 +60,9 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
         Integer count = tagList.stream().map(Tag::getCount).reduce(Integer::sum).orElse(0);
 
-            tagVOS = BeanUtil.copyToList(tagList, TagVO.class);
+            topicVOS = BeanUtil.copyToList(tagList, TopicVO.class);
 
-            tagVOS.forEach(tagVO -> tagVO.setPercentage((double) tagVO.getCount() / count));
+            topicVOS.forEach(topicVO -> topicVO.setPercentage((double) topicVO.getCount() / count));
         } else {
             LambdaQueryWrapper<Question> queryWrapper = new LambdaQueryWrapper<>();
 
@@ -100,21 +100,21 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
                             .in(Tag::getTagId, tagIds)
             );
 
-            tagVOS = tags.stream().map(tag -> {
+            topicVOS = tags.stream().map(tag -> {
                 int count = tagCount.getOrDefault(tag.getTagId(), 0L).intValue();
-                return TagVO.builder()
+                return TopicVO.builder()
                         .tagId(tag.getTagId())
                         .tagName(tag.getTagName())
                         .count(count)
                         .percentage((double) count / totalCount)
                         .build();
-            }).sorted(Comparator.comparing(TagVO::getCount).reversed()).toList();
+            }).sorted(Comparator.comparing(TopicVO::getCount).reversed()).toList();
         }
 
-        if (tagVOS.size() > n) {
-            return tagVOS.subList(0, n);
+        if (topicVOS.size() > n) {
+            return topicVOS.subList(0, n);
         } else {
-            return tagVOS;
+            return topicVOS;
         }
     }
 
@@ -127,7 +127,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
      * @return race chart数据
      */
     @Override
-    public List<TagVO> getRaceChartData(Integer n, LocalDateTime start, LocalDateTime end) {
+    public List<TopicVO> getRaceChartData(Integer n, LocalDateTime start, LocalDateTime end) {
         if (start == null || end == null) {
             List<Question> questions = questionMapper.selectList(null);
 
@@ -153,20 +153,20 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         start = LocalDateTime.of(start.getYear(), 1, 1, 0, 0);
         end = LocalDateTime.of(end.getYear(), 1, 1, 0, 0);
 
-        List<TagVO> tagVOList = new ArrayList<>();
+        List<TopicVO> topicVOList = new ArrayList<>();
 
         // 一月一次调用getTopNTags函数，获取每年的topN标签
         while (start.isBefore(end)) {
             LocalDateTime finalStart = start;
             LocalDateTime finalEnd = start.plusYears(1);
-            List<TagVO> tagVOS = getTopNTags(n, finalStart, finalEnd);
-            tagVOS.forEach(tagVO -> tagVO.setTime(finalStart));
+            List<TopicVO> topicVOS = getTopNTags(n, finalStart, finalEnd);
+            topicVOS.forEach(topicVO -> topicVO.setTime(finalStart));
 
-            tagVOList.addAll(tagVOS);
+            topicVOList.addAll(topicVOS);
 
             start = finalEnd;
         }
 
-        return tagVOList;
+        return topicVOList;
     }
 }

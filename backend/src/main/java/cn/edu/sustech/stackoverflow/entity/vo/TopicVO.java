@@ -21,8 +21,8 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(name = "TagVO", description = "标签TopN")
-public class TagVO {
+@Schema(name = "TopicVO", description = "标签TopN")
+public class TopicVO {
 
     @Schema(description = "标签ID")
     private Long tagId;

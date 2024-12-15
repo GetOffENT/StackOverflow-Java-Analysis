@@ -1,9 +1,11 @@
 package cn.edu.sustech.stackoverflow.service.impl;
 
 import cn.edu.sustech.stackoverflow.entity.*;
+import cn.edu.sustech.stackoverflow.entity.dto.TopicByEngagementQueryDTO;
 import cn.edu.sustech.stackoverflow.entity.vo.ErrorAndExceptionVO;
 import cn.edu.sustech.stackoverflow.entity.vo.ErrorVO;
 import cn.edu.sustech.stackoverflow.entity.vo.ExceptionVO;
+import cn.edu.sustech.stackoverflow.entity.vo.TopicByEngagementVO;
 import cn.edu.sustech.stackoverflow.mapper.*;
 import cn.edu.sustech.stackoverflow.service.AnalysisService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -11,10 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -33,9 +32,15 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     private final QuestionMapper questionMapper;
 
+    private final QuestionTagMapper questionTagMapper;
+
+    private final TagMapper tagMapper;
+
     private final AnswerMapper answerMapper;
 
     private final CommentMapper commentMapper;
+
+    private final UserMapper userMapper;
 
     /**
      * 获取前n个被高频讨论的错误和异常
@@ -114,6 +119,185 @@ public class AnalysisServiceImpl implements AnalysisService {
                 .errors(errors)
                 .exceptions(exceptions)
                 .build();
+    }
+
+    /**
+     * 获取指定时间段内用户声望高的用户参与度最高的n个话题
+     *
+     * @param topicByEngagementQueryDTO 查询参数
+     * @return 用户声望高的用户参与度最高的n个话题
+     */
+    @Override
+    public List<TopicByEngagementVO> getTopNTopicsByEngagementOfUserWithHigherReputation(TopicByEngagementQueryDTO topicByEngagementQueryDTO) {
+
+        Long questionCount = questionMapper.selectCount(null);
+        Long answerCount = answerMapper.selectCount(null);
+        Long commentCount = commentMapper.selectCount(null);
+
+        // 计算问题、回答、评论的权重
+        double questionWeight;
+        double answerWeight;
+        double commentWeight;
+
+        if (topicByEngagementQueryDTO.getQuestionWeight() == null || topicByEngagementQueryDTO.getAnswerWeight() == null || topicByEngagementQueryDTO.getCommentWeight() == null) {
+            questionWeight = 1.0 / 3;
+            answerWeight = 1.0 / 3;
+            commentWeight = 1.0 / 3;
+        } else {
+            double totalWeight = topicByEngagementQueryDTO.getQuestionWeight() + topicByEngagementQueryDTO.getAnswerWeight() + topicByEngagementQueryDTO.getCommentWeight();
+            questionWeight = topicByEngagementQueryDTO.getQuestionWeight() / totalWeight;
+            answerWeight = topicByEngagementQueryDTO.getAnswerWeight() / totalWeight;
+            commentWeight = topicByEngagementQueryDTO.getCommentWeight() / totalWeight;
+        }
+
+        double commentScoreUnit = 1.0;
+        double answerScoreUnit = commentScoreUnit * commentCount / answerCount;
+        double questionScoreUnit = answerScoreUnit * answerCount / questionCount;
+
+        double commentScore = commentScoreUnit * commentWeight;
+        double answerScore = answerScoreUnit * answerWeight;
+        double questionScore = questionScoreUnit * questionWeight;
+
+        List<User> users = userMapper.selectList(null);
+        users.sort((a, b) -> Long.compare(b.getReputation(), a.getReputation()));
+
+        users = users.subList(0, (int) (users.size() * (topicByEngagementQueryDTO.getPercentage() == null ? 1 : topicByEngagementQueryDTO.getPercentage())));
+
+        HashSet<Long> userIds = users.stream().map(User::getUserId).collect(Collectors.toCollection(HashSet::new));
+
+        // 查询符合条件的所有问题
+        List<Question> questions = questionMapper.selectList(
+                new LambdaQueryWrapper<Question>()
+                        .ge(topicByEngagementQueryDTO.getStart() != null, Question::getCreationDate, topicByEngagementQueryDTO.getStart())
+                        .le(topicByEngagementQueryDTO.getEnd() != null, Question::getCreationDate, topicByEngagementQueryDTO.getEnd())
+        );
+
+        Set<Long> questionIds = questions.stream().map(Question::getQuestionId).collect(Collectors.toSet());
+        if (questionIds.isEmpty()) {
+            return List.of();
+        }
+
+        // 查询符合条件的所有回答
+        List<Answer> answers = answerMapper.selectList(
+                new LambdaQueryWrapper<Answer>()
+                        .in(Answer::getQuestionId, questionIds)
+                        .ge(topicByEngagementQueryDTO.getStart() != null, Answer::getCreationDate, topicByEngagementQueryDTO.getStart())
+                        .le(topicByEngagementQueryDTO.getEnd() != null, Answer::getCreationDate, topicByEngagementQueryDTO.getEnd())
+        );
+
+        List<Long> answerIds = answers.stream().map(Answer::getAnswerId).toList();
+        // answerId -> questionId 的映射map
+        Map<Long, Long> answerToQuestion = answers.stream().collect(Collectors.toMap(Answer::getAnswerId, Answer::getQuestionId));
+
+        // 查询符合条件的所有评论
+        List<Comment> comments = commentMapper.selectList(
+                new LambdaQueryWrapper<Comment>()
+                        .in(Comment::getPostId, questionIds)
+                        .or()
+                        .in(Comment::getPostId, answerIds)
+                        .ge(topicByEngagementQueryDTO.getStart() != null, Comment::getCreationDate, topicByEngagementQueryDTO.getStart())
+                        .le(topicByEngagementQueryDTO.getEnd() != null, Comment::getCreationDate, topicByEngagementQueryDTO.getEnd())
+        );
+
+        // 初始化一个hashset记录每个问题id和对应的高声誉用户互动数据
+        Map<Long, Map<String, Object>> questionToData =
+                questions.stream().collect(Collectors.toMap(Question::getQuestionId, question -> Map.of(
+                        "score", 0.0,
+                        "questionCount", 0,
+                        "answerCount", 0,
+                        "commentCount", 0
+                )));
+
+        // 高声誉用户的问题、回答、评论互动数据
+        questions.stream()
+                .filter(question -> userIds.contains(question.getOwnerUserId()))
+                .forEach(question -> {
+                    Map<String, Object> data = new HashMap<>(questionToData.get(question.getQuestionId()));
+                    data.put("score", (double) data.get("score") + questionScore);
+                    data.put("questionCount", (int) data.get("questionCount") + 1);
+                    questionToData.put(question.getQuestionId(), data);
+                });
+
+        answers.stream()
+                .filter(answer -> userIds.contains(answer.getOwnerUserId()))
+                .forEach(answer -> {
+                    Map<String, Object> data = new HashMap<>(questionToData.get(answer.getQuestionId()));
+                    data.put("score", (double) data.get("score") + answerScore);
+                    data.put("answerCount", (int) data.get("answerCount") + 1);
+                    questionToData.put(answer.getQuestionId(), data);
+                });
+
+        comments.stream()
+                .filter(comment -> userIds.contains(comment.getOwnerUserId()))
+                .forEach(comment -> {
+                    Long questionId;
+
+                    if (questionToData.containsKey(comment.getPostId())) {
+                        // 如果是问题的评论
+                        questionId = comment.getPostId();
+                    } else {
+                        // 如果是回答的评论
+                        questionId = answerToQuestion.get(comment.getPostId());
+                    }
+                    Map<String, Object> data = new HashMap<>(questionToData.get(questionId));
+                    data.put("score", (double) data.get("score") + commentScore);
+                    data.put("commentCount", (int) data.get("commentCount") + 1);
+                    questionToData.put(questionId, data);
+                });
+
+        List<QuestionTag> questionTags = questionTagMapper.selectList(
+                new LambdaQueryWrapper<QuestionTag>()
+                        .in(QuestionTag::getQuestionId, questionIds)
+        );
+
+        // tagId的set
+        HashSet<Long> tagIds = questionTags.stream().map(QuestionTag::getTagId).collect(Collectors.toCollection(HashSet::new));
+        List<Tag> tags = tagMapper.selectList(
+                new LambdaQueryWrapper<Tag>()
+                        .in(Tag::getTagId, tagIds)
+        );
+        // tagId -> Tag 的映射map
+        Map<Long, Tag> tagMap = tags.stream().collect(Collectors.toMap(Tag::getTagId, tag -> tag));
+
+        // questionId -> List<Tag> 的映射map
+        Map<Long, List<Tag>> questionToTags = questionTags.stream()
+                .collect(Collectors.groupingBy(QuestionTag::getQuestionId,
+                        Collectors.mapping(questionTag -> tagMap.get(questionTag.getTagId()), Collectors.toList())));
+
+        // tagId -> TopicByEngagementVO 的映射map
+        HashMap<Long, TopicByEngagementVO> tagToTopic = new HashMap<>();
+
+        // questionToData -> TopicByEngagementVO
+        questionToData.forEach((questionId, data) -> {
+            List<Tag> questionTagsList = questionToTags.get(questionId);
+            // 有的问题没有标签
+            if (questionTagsList != null) {
+                questionTagsList.forEach(tag -> {
+                    TopicByEngagementVO topic = tagToTopic.get(tag.getTagId());
+                    if (topic == null) {
+                        topic = TopicByEngagementVO.builder()
+                                .tagId(tag.getTagId())
+                                .tagName(tag.getTagName())
+                                .score(0.0)
+                                .questionCount(0)
+                                .answerCount(0)
+                                .commentCount(0)
+                                .build();
+                        tagToTopic.put(tag.getTagId(), topic);
+                    }
+                    topic.setScore(topic.getScore() + (double) data.get("score"));
+                    topic.setQuestionCount(topic.getQuestionCount() + (int) data.get("questionCount"));
+                    topic.setAnswerCount(topic.getAnswerCount() + (int) data.get("answerCount"));
+                    topic.setCommentCount(topic.getCommentCount() + (int) data.get("commentCount"));
+                });
+            }
+        });
+
+
+        return tagToTopic.values().stream()
+                .sorted((a, b) -> Double.compare(b.getScore(), a.getScore()))
+                .limit(topicByEngagementQueryDTO.getN())
+                .collect(Collectors.toList());
     }
 
     /**

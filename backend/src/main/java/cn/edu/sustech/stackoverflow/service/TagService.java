@@ -1,7 +1,7 @@
 package cn.edu.sustech.stackoverflow.service;
 
 import cn.edu.sustech.stackoverflow.entity.Tag;
-import cn.edu.sustech.stackoverflow.entity.vo.TagVO;
+import cn.edu.sustech.stackoverflow.entity.vo.TopicVO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.time.LocalDateTime;
@@ -25,7 +25,7 @@ public interface TagService extends IService<Tag> {
      * @param endTime   结束时间
      * @return 前n个热门标签
      */
-    List<TagVO> getTopNTags(Integer n, LocalDateTime startTime, LocalDateTime endTime);
+    List<TopicVO> getTopNTags(Integer n, LocalDateTime startTime, LocalDateTime endTime);
 
     /**
      * 获取指定时间段内race chart数据(一年一次)
@@ -34,5 +34,5 @@ public interface TagService extends IService<Tag> {
      * @param end 结束时间
      * @return race chart数据
      */
-    List<TagVO> getRaceChartData(Integer n, LocalDateTime start, LocalDateTime end);
+    List<TopicVO> getRaceChartData(Integer n, LocalDateTime start, LocalDateTime end);
 }
