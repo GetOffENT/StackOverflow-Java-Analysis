@@ -101,6 +101,20 @@ export const constantRoutes = [
         name: "Restful",
         component: () => import("@/views/restful/index"),
         meta: { title: "API Overview" },
+        children: [ // 嵌套子路由
+          {
+            path: "topicfrequency", // 子路由路径
+            name: "TopicFrequency",
+            component: () => import("@/views/restful/TopicFrequencyPage"), // 新页面组件
+            meta: { title: "Topic Frequency" },
+          },
+          {
+            path: "bugfrequency", // 子路由路径
+            name: "BugFrequency",
+            component: () => import("@/views/restful/BugFrequencyPage"), // 新页面组件
+            meta: { title: "Bug Frequency" },
+          },
+        ],
       },
     ]
   },
