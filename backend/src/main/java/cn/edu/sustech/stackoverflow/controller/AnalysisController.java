@@ -8,25 +8,28 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * <p>
- * 标签信息表 前端控制器
+ * 数据分析 前端控制器
  * </p>
  *
  * @author Yuxian Wu
  * @since 2024-12-11
  */
 @RestController
-@RequestMapping("/tag")
+@RequestMapping("/analysis")
 @Slf4j
-@Tag(name = "标签相关接口", description = "标签相关接口")
+@Tag(name = "数据分析相关接口", description = "数据分析相关接口")
 @RequiredArgsConstructor
-public class TagController {
+public class AnalysisController {
 
     private final TagService tagService;
 
@@ -66,4 +69,5 @@ public class TagController {
         log.info("获取指定时间段内race chart数据(一年一次) n:{}", n);
         return Result.success(tagService.getRaceChartData(n, start, end));
     }
+
 }
