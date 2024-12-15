@@ -1,8 +1,10 @@
 package cn.edu.sustech.stackoverflow.controller;
 
 import cn.edu.sustech.stackoverflow.entity.vo.ErrorAndExceptionVO;
+import cn.edu.sustech.stackoverflow.entity.vo.TagVO;
 import cn.edu.sustech.stackoverflow.result.Result;
 import cn.edu.sustech.stackoverflow.service.AnalysisService;
+import cn.edu.sustech.stackoverflow.service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -31,6 +34,45 @@ import java.time.LocalDateTime;
 public class AnalysisController {
 
     private final AnalysisService analysisService;
+
+    private final TagService tagService;
+
+    /**
+     * 获取指定时间段内的前n个热门标签
+     *
+     * @param n     前n个
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return 前n个热门标签
+     */
+    @GetMapping("/topic/top")
+    @Operation(summary = "获取前n个热门标签")
+    public Result<List<TagVO>> getTopNTags(
+            @RequestParam Integer n,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
+    ) {
+        log.info("获取前n个热门标签 n:{}", n);
+        return Result.success(tagService.getTopNTags(n, start, end));
+    }
+
+    /**
+     * 获取指定时间段内race chart数据(一年一次)
+     * @param n 前n名
+     * @param start 开始时间
+     * @param end 结束时间
+     * @return race chart数据
+     */
+    @GetMapping("/topic/race")
+    @Operation(summary = "获取指定时间段内race chart数据(一年一次)")
+    public Result<List<TagVO>> getRaceChartData(
+            @RequestParam Integer n,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
+    ) {
+        log.info("获取指定时间段内race chart数据(一年一次) n:{}", n);
+        return Result.success(tagService.getRaceChartData(n, start, end));
+    }
 
     /**
      * 获取前n个被高频讨论的错误和异常
