@@ -22,3 +22,43 @@ export function getTopNErrorsAndExceptions(params) {
     params,
   })
 }
+
+export function getFirstAnswersWithCreateDate(params) {
+  return request({
+    url: "/analysis/answer-quality/create-date/first",
+    method: "get",
+    params,
+  })
+}
+
+export function getAcceptedAnswersWithCreateDate(params) {
+  return request({
+    url: "/analysis/answer-quality/create-date/accepted",
+    method: "get",
+    params,
+  })
+}
+
+export function getAnswersWithCreateDate(params) {
+  return request({
+    url: "/analysis/answer-quality/create-date/all",
+    method: "get",
+    params,
+  })
+}
+
+export function getAnswersWithUserReputation(params) {
+  return request({
+    url: "/analysis/answer-quality/reputation",
+    method: "get",
+    params,
+  })
+}
+
+export function getAnswersWithLength(params) {
+  return request({
+    url: "/analysis/answer-quality/length",
+    method: "get",
+    params,
+  })
+}
