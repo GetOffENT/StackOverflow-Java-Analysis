@@ -127,7 +127,7 @@ export default {
       this.pieChart.setOption({
         tooltip: {
           trigger: "item",
-          formatter: "{a} <br/>{b} : {c} ({d}%)",
+          formatter: "{a} <br/>{b} : {d}%",
         },
         legend: {
           left: "center",
