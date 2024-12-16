@@ -120,6 +120,12 @@ export const constantRoutes = [
             component: () => import("@/views/restful/SpecificTopicFrequency"), // 新页面组件
             meta: { title: "Specific Topic Frequency" },
           },
+          {
+            path: "specificbugfrequency", // 子路由路径
+            name: "SpecificBugFrequency",
+            component: () => import("@/views/restful/SpecificBugFrequency"), // 新页面组件
+            meta: { title: "Specific Bug Frequency" },
+          }
         ],
       },
     ]
