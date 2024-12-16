@@ -96,12 +96,6 @@ export const constantRoutes = [
     redirect: "/restful/index",
     meta: { title: "RESTful API", icon: "el-icon-s-operation" },
     children: [
-      {
-        path: "index",
-        name: "Restful",
-        component: () => import("@/views/restful/index"),
-        meta: { title: "API Overview" },
-        children: [ // 嵌套子路由
           {
             path: "toptopicfrequency", // 子路由路径
             name: "TopTopicFrequency",
@@ -126,9 +120,7 @@ export const constantRoutes = [
             component: () => import("@/views/restful/SpecificBugFrequency"), // 新页面组件
             meta: { title: "Specific Bug Frequency" },
           }
-        ],
-      },
-    ]
+          ]
   },
 
   // 404 page must be placed at the end !!!
