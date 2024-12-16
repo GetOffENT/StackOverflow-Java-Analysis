@@ -11,11 +11,7 @@
 
       <!-- 结束日期选择器 -->
       <el-form-item label="to">
-        <el-date-picker
-          v-model="endDate"
-          type="date"
-          placeholder="end date"
-        />
+        <el-date-picker v-model="endDate" type="date" placeholder="end date" />
       </el-form-item>
       <!-- 显示数量输入框 -->
       <el-form-item label="count">
@@ -58,6 +54,7 @@
 import { getTopNTopics, getRaceChartData } from "@/api/tag";
 import dayjs from "dayjs";
 import * as d3 from "d3";
+import d3Tip from "d3-tip";
 import cloud from "d3-cloud";
 
 export default {
@@ -153,10 +150,7 @@ export default {
           .text((d) => d.text)
           .append("title")
           .text(
-            (d) =>
-              `${d.text}\ncount: ${d.size}\npercentage: ${
-                d.percentage
-              }`
+            (d) => `${d.text}\ncount: ${d.size}\npercentage: ${d.percentage}`
           );
       }
     },
@@ -227,7 +221,7 @@ export default {
         .append("text")
         .attr("class", "x-axis-label")
         .attr("x", this.chartWidth / 2)
-        .attr("y", this.topN * this.barHeight + 40) // 轴线下方的偏移量
+        .attr("y", this.topN * this.barHeight + 40)
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
         .text("Number of questions");
@@ -235,15 +229,16 @@ export default {
       svg
         .append("text")
         .attr("class", "y-axis-label")
-        .attr("x", 0) // 调整位置到纵轴左侧
-        .attr("y", -(this.margin.top / 2)) // 轴线左侧的偏移量
+        .attr("x", 0)
+        .attr("y", -(this.margin.top / 2))
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
         .text("Topic");
 
       const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-      svg
+      // 添加动画：让每个条形图的宽度从0到最终值
+      const bars = svg
         .selectAll(".bar")
         .data(this.staticData)
         .enter()
@@ -252,9 +247,13 @@ export default {
         .attr("x", 0)
         .attr("y", (d) => y(d.tagName))
         .attr("height", y.bandwidth())
-        .attr("width", (d) => x(d.count))
-        .style("fill", (d) => color(d.tagName));
+        .attr("width", 0)
+        .style("fill", (d) => color(d.tagName))
+        .transition()
+        .duration(1000)
+        .attr("width", (d) => x(d.count));
 
+      // 添加标签并且动画逐渐显示
       svg
         .selectAll(".label")
         .data(this.staticData)
@@ -264,7 +263,11 @@ export default {
         .attr("x", (d) => x(d.count) + 5)
         .attr("y", (d) => y(d.tagName) + y.bandwidth() / 2)
         .attr("dy", ".35em")
-        .text((d) => d.count);
+        .text((d) => d.count)
+        .style("opacity", 0) // 初始透明度为0
+        .transition() // 动画
+        .duration(1000) // 动画时长
+        .style("opacity", 1); // 动画结束时透明度为1
     },
     async startRaceChart() {
       this.currentClick = "dynamic";

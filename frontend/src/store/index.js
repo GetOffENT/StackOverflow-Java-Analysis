@@ -5,17 +5,27 @@ import app from './modules/app'
 import settings from './modules/settings'
 import tagsView from './modules/tagsView'
 import user from './modules/user'
+import dateRange from './modules/dateRange'
+import createPersistedState from "vuex-persistedstate";
 
 Vue.use(Vuex)
+
+const vuexLocalStorage = createPersistedState({
+  key: "vuexLocalStorage",
+  storage: window.localStorage,
+  paths: ["dateRange"],
+});
 
 const store = new Vuex.Store({
   modules: {
     app,
     settings,
     tagsView,
-    user
+    user,
+    dateRange
   },
-  getters
+  getters,
+  plugins: [vuexLocalStorage]
 })
 
 export default store
