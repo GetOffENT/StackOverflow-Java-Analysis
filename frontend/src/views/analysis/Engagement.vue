@@ -5,7 +5,7 @@
       <el-form-item label="count" style="margin-right: 30px">
         <el-input-number
           v-model="topN"
-          :min="1"
+          :min="2"
           :max="100"
           @change="debounceCountChange"
         />

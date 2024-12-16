@@ -1,5 +1,8 @@
 <template>
   <div style="margin-top: 20px">
+    <h1 style="justify-self: center; margin-bottom: 30px">
+      Top N most frequently asked topics
+    </h1>
     <el-form :inline="true" class="form" style="justify-self: center">
       <el-form-item label="from">
         <el-date-picker
@@ -17,7 +20,7 @@
       <el-form-item label="count">
         <el-input-number
           v-model="topN"
-          :min="1"
+          :min="2"
           :max="100"
           @change="adjustChartHeight"
         />
