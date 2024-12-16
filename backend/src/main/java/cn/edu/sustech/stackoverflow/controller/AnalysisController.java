@@ -38,6 +38,17 @@ public class AnalysisController {
 
     private final TagService tagService;
 
+    /**
+     * 获取所有数据的时间范围
+     *
+     * @return 所有数据的时间范围
+     */
+    @GetMapping("/date-range")
+    @Operation(summary = "获取所有数据的时间范围")
+    public Result<DateRangeVO> getDateRange() {
+        log.info("获取所有数据的时间范围");
+        return Result.success(analysisService.getDateRange());
+    }
 
     /**
      * 根据标签名获取对应标签数据

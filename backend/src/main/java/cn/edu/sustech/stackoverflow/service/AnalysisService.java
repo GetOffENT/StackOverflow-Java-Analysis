@@ -17,6 +17,13 @@ import java.util.List;
 public interface AnalysisService {
 
     /**
+     * 获取所有数据的时间范围
+     *
+     * @return 所有数据的时间范围
+     */
+    DateRangeVO getDateRange();
+
+    /**
      * 获取前n个被高频讨论的错误和异常
      *
      * @param n     前n个

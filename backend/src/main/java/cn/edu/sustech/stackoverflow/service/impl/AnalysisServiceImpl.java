@@ -43,6 +43,33 @@ public class AnalysisServiceImpl implements AnalysisService {
     private final UserMapper userMapper;
 
     /**
+     * 获取所有数据的时间范围
+     *
+     * @return 所有数据的时间范围
+     */
+    @Override
+    public DateRangeVO getDateRange() {
+        List<Question> questions = questionMapper.selectList(null);
+
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+
+        for (Question question : questions) {
+            if (start == null || question.getCreationDate().isBefore(start)) {
+                start = question.getCreationDate();
+            }
+            if (end == null || question.getCreationDate().isAfter(end)) {
+                end = question.getCreationDate();
+            }
+        }
+
+        return DateRangeVO.builder()
+                .start(start)
+                .end(end)
+                .build();
+    }
+
+    /**
      * 获取前n个被高频讨论的错误和异常
      *
      * @param n     前n个
