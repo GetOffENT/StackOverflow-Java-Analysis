@@ -43,6 +43,66 @@ public class AnalysisServiceImpl implements AnalysisService {
     private final UserMapper userMapper;
 
     /**
+     * 获取特定bug
+     *
+     * @param bugName   bug名字
+     * @return 特定bug信息
+     */
+    @Override
+    public Object getBugByBugName(String bugName) {
+        // 查询所有的 Question
+        List<Question> questions = questionMapper.selectList(
+                new LambdaQueryWrapper<Question>()
+        );
+
+        // 查询所有的 Answer
+        List<Answer> answers = answerMapper.selectList(
+                new LambdaQueryWrapper<Answer>()
+        );
+
+        // 查询所有的 Comment
+        List<Comment> comments = commentMapper.selectList(
+                new LambdaQueryWrapper<Comment>()
+        );
+
+        // 定义统计结果的 Map
+        Map<String, Long> errorCountMap = new HashMap<>();
+        Map<String, Long> exceptionCountMap = new HashMap<>();
+
+        // 统计问题中的 error 和 exception
+        questions.forEach(question -> {
+            countOccurrences(question.getBody(), errorCountMap, exceptionCountMap);
+            countOccurrences(question.getTitle(), errorCountMap, exceptionCountMap);
+        });
+
+        // 统计回答中的 error 和 exception
+        answers.forEach(answer -> countOccurrences(answer.getBody(), errorCountMap, exceptionCountMap));
+
+        // 统计评论中的 error 和 exception
+        comments.forEach(comment -> countOccurrences(comment.getBody(), errorCountMap, exceptionCountMap));
+
+        // 合并错误和异常的计数
+        Map<String, Long> mixedCountMap = new HashMap<>();
+        errorCountMap.forEach((key, value) -> mixedCountMap.put(key, mixedCountMap.getOrDefault(key, 0L) + value));
+        exceptionCountMap.forEach((key, value) -> mixedCountMap.put(key, mixedCountMap.getOrDefault(key, 0L) + value));
+
+        // 计算总计数
+        long totalMixedCount = mixedCountMap.values().stream().mapToLong(Long::longValue).sum();
+
+        // 查找第一个匹配的 bug
+        Long bugFrequency = mixedCountMap.get(bugName);
+        if (bugFrequency != null) {
+            return ThrowableVO.builder()
+                    .name(bugName)
+                    .count(bugFrequency)
+                    .percentage(totalMixedCount > 0 ? bugFrequency * 100.0 / totalMixedCount : 0.0)
+                    .build();
+        } else {
+            return "未找到名称: " + bugName;
+        }
+    }
+
+    /**
      * 获取前n个被高频讨论的错误和异常
      *
      * @param n     前n个
@@ -93,7 +153,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         long totalErrorCount = errorCountMap.values().stream().mapToLong(Long::longValue).sum();
         long totalExceptionCount = exceptionCountMap.values().stream().mapToLong(Long::longValue).sum();
 
-        if (mixed) {
+        if ((mixed != null && mixed)) {
             // 合并错误和异常的计数
             Map<String, Long> mixedCountMap = new HashMap<>();
             long totalMixedCount = totalErrorCount + totalExceptionCount;

@@ -15,6 +15,13 @@ import java.util.List;
  * @since 2024-12-15 9:47
  */
 public interface AnalysisService {
+    /**
+     * 获取特定bug
+     *
+     * @param bugName   bug名字
+     * @return 特定bug信息
+     */
+    Object getBugByBugName(String bugName);
 
     /**
      * 获取前n个被高频讨论的错误和异常
