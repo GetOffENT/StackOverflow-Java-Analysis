@@ -120,7 +120,7 @@ public class AnalysisController {
             @RequestParam Integer n,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end,
-            @RequestParam(required = false) Boolean mixed
+            @RequestParam(required = false, defaultValue = "false") Boolean mixed
     ) {
         log.info("获取前n个被讨论的高频错误和异常 n:{}", n);
         return Result.success(analysisService.getTopNErrorsAndExceptions(n, start, end, mixed));
