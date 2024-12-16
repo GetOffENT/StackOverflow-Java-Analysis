@@ -33,6 +33,15 @@ public class TopicByEngagementVO {
     @Schema(description = "根据高声誉用户参与度(问题、回答、评论对应的权重)计算的分数")
     private Double score;
 
+    @Schema(description = "问题分")
+    private Double questionScore;
+
+    @Schema(description = "回答分")
+    private Double answerScore;
+
+    @Schema(description = "评论分")
+    private Double commentScore;
+
     @Schema(description = "标签下高声誉用户发布的问题数")
     private Integer questionCount;
 

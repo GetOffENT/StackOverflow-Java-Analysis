@@ -220,6 +220,9 @@ public class AnalysisServiceImpl implements AnalysisService {
         Map<Long, Map<String, Object>> questionToData =
                 questions.stream().collect(Collectors.toMap(Question::getQuestionId, question -> Map.of(
                         "score", 0.0,
+                        "questionScore", 0.0,
+                        "answerScore", 0.0,
+                        "commentScore", 0.0,
                         "questionCount", 0,
                         "answerCount", 0,
                         "commentCount", 0
@@ -230,7 +233,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                 .filter(question -> userIds.contains(question.getOwnerUserId()))
                 .forEach(question -> {
                     Map<String, Object> data = new HashMap<>(questionToData.get(question.getQuestionId()));
-                    data.put("score", (double) data.get("score") + questionScore);
+                    data.put("questionScore", (double) data.get("questionScore") + questionScore);
                     data.put("questionCount", (int) data.get("questionCount") + 1);
                     questionToData.put(question.getQuestionId(), data);
                 });
@@ -239,7 +242,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                 .filter(answer -> userIds.contains(answer.getOwnerUserId()))
                 .forEach(answer -> {
                     Map<String, Object> data = new HashMap<>(questionToData.get(answer.getQuestionId()));
-                    data.put("score", (double) data.get("score") + answerScore);
+                    data.put("answerScore", (double) data.get("answerScore") + answerScore);
                     data.put("answerCount", (int) data.get("answerCount") + 1);
                     questionToData.put(answer.getQuestionId(), data);
                 });
@@ -257,10 +260,17 @@ public class AnalysisServiceImpl implements AnalysisService {
                         questionId = answerToQuestion.get(comment.getPostId());
                     }
                     Map<String, Object> data = new HashMap<>(questionToData.get(questionId));
-                    data.put("score", (double) data.get("score") + commentScore);
+                    data.put("commentScore", (double) data.get("commentScore") + commentScore);
                     data.put("commentCount", (int) data.get("commentCount") + 1);
                     questionToData.put(questionId, data);
                 });
+
+        // 相加得到总分
+        questionToData.keySet().forEach(questionId -> {
+            Map<String, Object> data = new HashMap<>(questionToData.get(questionId));
+            data.put("score", (double) data.get("questionScore") + (double) data.get("answerScore") + (double) data.get("commentScore"));
+            questionToData.put(questionId, data);
+        });
 
         List<QuestionTag> questionTags = questionTagMapper.selectList(
                 new LambdaQueryWrapper<QuestionTag>()
@@ -296,6 +306,9 @@ public class AnalysisServiceImpl implements AnalysisService {
                                 .tagId(tag.getTagId())
                                 .tagName(tag.getTagName())
                                 .score(0.0)
+                                .questionScore(0.0)
+                                .answerScore(0.0)
+                                .commentScore(0.0)
                                 .questionCount(0)
                                 .answerCount(0)
                                 .commentCount(0)
@@ -303,6 +316,9 @@ public class AnalysisServiceImpl implements AnalysisService {
                         tagToTopic.put(tag.getTagId(), topic);
                     }
                     topic.setScore(topic.getScore() + (double) data.get("score"));
+                    topic.setQuestionScore(topic.getQuestionScore() + (double) data.get("questionScore"));
+                    topic.setAnswerScore(topic.getAnswerScore() + (double) data.get("answerScore"));
+                    topic.setCommentScore(topic.getCommentScore() + (double) data.get("commentScore"));
                     topic.setQuestionCount(topic.getQuestionCount() + (int) data.get("questionCount"));
                     topic.setAnswerCount(topic.getAnswerCount() + (int) data.get("answerCount"));
                     topic.setCommentCount(topic.getCommentCount() + (int) data.get("commentCount"));
