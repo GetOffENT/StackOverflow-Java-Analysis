@@ -66,26 +66,46 @@ export const constantRoutes = [
       {
         path: "topic",
         name: "Topic",
-        component: () => import("@/views/analysis/Topic.vue"),
+        component: () => import("@/views/analysis/Topic/index.vue"),
         meta: { title: "Java Topics" },
       },
       {
         path: "engagement",
         name: "Engagement",
-        component: () => import("@/views/analysis/Engagement.vue"),
+        component: () => import("@/views/analysis/Engagement/index.vue"),
         meta: { title: "User Engagement" },
       },
       {
         path: "mistake",
         name: "Mistake",
-        component: () => import("@/views/analysis/Mistake.vue"),
+        component: () => import("@/views/analysis/Mistake/index.vue"),
         meta: { title: "Common Mistakes" },
       },
       {
         path: "answer-quality",
         name: "AnswerQuality",
-        component: () => import("@/views/analysis/AnswerQuality.vue"),
+        component: () => import("@/views/analysis/AnswerQuality/index"),
         meta: { title: "Answer Quality" },
+        children: [
+          {
+            path: "elapsed-time",
+            name: "ElapsedTime",
+            component: () => import("@/views/analysis/AnswerQuality/ElapsedTime/index"),
+            meta: { title: "Elapsed Time" },
+          },
+          {
+            path: "user-reputation",
+            name: "UserReputation",
+            component: () => import("@/views/analysis/AnswerQuality/UserReputation/index"),
+            meta: { title: "User Reputation" },
+          },
+          {
+            path: "answer-length",
+            name: "AnswerLength",
+            component: () => import("@/views/analysis/AnswerQuality/AnswerLength/index"),
+            meta: { title: "Answer Length" },
+          }
+        ]
       }
     ],
   },

@@ -1,12 +1,12 @@
 <template>
   <div>
-    <h1>Answer Quality</h1>
+    <h1>AnswerLength</h1>
   </div>
 </template>
 
 <script>
 export default {
-  name: "AnswerQuality",
+  name: "AnswerLength",
 };
 </script>
 
