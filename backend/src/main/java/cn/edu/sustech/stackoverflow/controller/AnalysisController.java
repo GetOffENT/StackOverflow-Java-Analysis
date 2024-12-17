@@ -58,7 +58,7 @@ public class AnalysisController {
      */
     @GetMapping("/overview/2")
     @Operation(summary = "获取question、answer、comment、user每个月新产生的数量")
-    public Result<Map<String, List<CountInSingleMonthVO>>> getCountInSingleMonth(
+    public Result<List<CountInSingleMonthVO>> getCountInSingleMonth(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
     ) {

@@ -102,5 +102,5 @@ public interface AnalysisService {
      * @param end   结束时间
      * @return question、answer、comment每个月新产生的数量
      */
-    Map<String, List<CountInSingleMonthVO>> getCountInSingleMonth(LocalDateTime start, LocalDateTime end);
+    List<CountInSingleMonthVO> getCountInSingleMonth(LocalDateTime start, LocalDateTime end);
 }

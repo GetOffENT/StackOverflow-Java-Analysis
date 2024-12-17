@@ -546,7 +546,7 @@ public class AnalysisServiceImpl implements AnalysisService {
      * @return question、answer、comment每个月新产生的数量
      */
     @Override
-    public Map<String, List<CountInSingleMonthVO>> getCountInSingleMonth(LocalDateTime start, LocalDateTime end) {
+    public List<CountInSingleMonthVO> getCountInSingleMonth(LocalDateTime start, LocalDateTime end) {
         if (start == null || end == null) {
             DateRangeVO dateRange = getDateRange();
             if (start == null) {
@@ -576,26 +576,34 @@ public class AnalysisServiceImpl implements AnalysisService {
         );
 
         // 存储每个数据类型（问题、回答、评论）的统计结果
-        Map<String, List<CountInSingleMonthVO>> result = new HashMap<>();
+        List<CountInSingleMonthVO> result = new ArrayList<>();
 
         // 将数据按月分组并统计
-        List<CountInSingleMonthVO> questionCounts = groupByMonthAndCount(questions, start, end);
-        List<CountInSingleMonthVO> answerCounts = groupByMonthAndCount(answers, start, end);
-        List<CountInSingleMonthVO> commentCounts = groupByMonthAndCount(comments, start, end);
+        Map<String, Integer> questionMonthlyCounts = groupByMonthAndCount(questions, start, end);
+        Map<String, Integer> answerMonthlyCounts = groupByMonthAndCount(answers, start, end);
+        Map<String, Integer> commentMonthlyCounts = groupByMonthAndCount(comments, start, end);
 
-        result.put("questions", questionCounts);
-        result.put("answers", answerCounts);
-        result.put("comments", commentCounts);
+        Set<String> allMonths = new HashSet<>();
+        allMonths.addAll(questionMonthlyCounts.keySet());
+        allMonths.addAll(answerMonthlyCounts.keySet());
+        allMonths.addAll(commentMonthlyCounts.keySet());
 
+        for (String month : allMonths) {
+            CountInSingleMonthVO vo = new CountInSingleMonthVO();
+            vo.setTime(month);
+            vo.setQuestionCount(questionMonthlyCounts.getOrDefault(month, 0));
+            vo.setAnswerCount(answerMonthlyCounts.getOrDefault(month, 0));
+            vo.setCommentCount(commentMonthlyCounts.getOrDefault(month, 0));
+            result.add(vo);
+        }
+
+        result.sort(Comparator.comparing(CountInSingleMonthVO::getTime));
         return result;
     }
 
-    private <T> List<CountInSingleMonthVO> groupByMonthAndCount(List<T> data, LocalDateTime start, LocalDateTime end) {
-        // 存储每个月的计数
-        List<CountInSingleMonthVO> counts = new ArrayList<>();
-
-        // 遍历数据按月统计
+    private <T> Map<String, Integer> groupByMonthAndCount(List<T> data, LocalDateTime start, LocalDateTime end) {
         Map<String, Integer> monthlyCounts = new HashMap<>();
+
         for (T item : data) {
             LocalDateTime creationDate = null;
             if (item instanceof Question) {
@@ -612,14 +620,7 @@ public class AnalysisServiceImpl implements AnalysisService {
             }
         }
 
-        // 将统计结果转换成CountInSingleMonthVO对象
-        for (Map.Entry<String, Integer> entry : monthlyCounts.entrySet()) {
-            counts.add(new CountInSingleMonthVO(entry.getValue(), entry.getKey()));
-        }
-
-        counts.sort(Comparator.comparing(CountInSingleMonthVO::getTime));
-
-        return counts;
+        return monthlyCounts;
     }
 
     /**
