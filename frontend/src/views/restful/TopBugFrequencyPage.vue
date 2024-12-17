@@ -6,13 +6,17 @@
       <label for="topN">top N</label>
       <input v-model.number="topN" type="number" placeholder="Enter top N">
     </div>
-    <!-- 单独的按钮 -->
     <!-- 新增：输入框用于输入起始和结束时间 -->
     <div class="input-group">
       <label for="startDate">Start Date and Time:</label>
       <input v-model="startDate" type="datetime-local" placeholder="Start Date and Time">
       <label for="endDate">End Date and Time:</label>
       <input v-model="endDate" type="datetime-local" placeholder="End Date and Time">
+    </div>
+    <!-- 新增：输入框用于输入 mixed 参数 -->
+    <div class="input-group">
+      <label for="mixed">Mixed:</label>
+      <input v-model="mixed" type="checkbox">
     </div>
     <div class="button-group">
       <button @click="getTopBugs">run</button>
@@ -37,7 +41,8 @@ export default {
       topicResult: null,
       topN: 10, // 用于存储用户输入的 top N 值，默认值为 10
       startDate: '', // 用于存储用户输入的起始时间和日期
-      endDate: '' // 用于存储用户输入的结束时间和日期
+      endDate: '', // 用于存储用户输入的结束时间和日期
+      mixed: false // 用于存储用户输入的 mixed 参数，默认为 false
     }
   },
   computed: {
@@ -46,21 +51,24 @@ export default {
       const params = [];
       const startTime = this.startDate ? `start=${this.formatDateTime(this.startDate)}` : '';
       const endTime = this.endDate ? `end=${this.formatDateTime(this.endDate)}` : '';
+      const mixedParam = this.mixed ? 'mixed=true' : '';
       if (this.topN) params.push(`n=${this.topN}`);
       if (startTime) params.push(startTime);
       if (endTime) params.push(endTime);
+      if (mixedParam) params.push(mixedParam);
       return `http://localhost:8080/analysis/error-and-exception/top${params.length ? `?${params.join('&')}` : ''}`;
     }
   },
   methods: {
     async getTopBugs() {
       try {
-        // 使用用户输入的 topN 值和日期时间范围
+        // 使用用户输入的 topN 值、日期时间范围和 mixed 参数
         const response = await axios.get(`http://localhost:8080/analysis/error-and-exception/top`, {
           params: {
             n: this.topN,
             start: this.startDate,
-            end: this.endDate
+            end: this.endDate,
+            mixed: this.mixed
           }
         })
         this.topicResult = response.data

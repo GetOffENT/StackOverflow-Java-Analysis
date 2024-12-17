@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
  * <p>
@@ -39,6 +38,18 @@ public class AnalysisController {
 
     private final TagService tagService;
 
+    /**
+     * 根据bug名获取对应bug数据
+     *
+     * @param bugName 标签名
+     * @return 对应标签数据
+     */
+    @GetMapping("/error-and-exception")
+    @Operation(summary = "根据标签名获取对应标签数据")
+    public Result<Object> getBugByBugName(@RequestParam String bugName) {
+        log.info("根据bug名获取对应bug数据 bugName:{}", bugName);
+        return Result.success(analysisService.getBugByBugName(bugName));
+    }
     /**
      * 获取数据概览
      *
