@@ -43,6 +43,33 @@ public class AnalysisServiceImpl implements AnalysisService {
     private final UserMapper userMapper;
 
     /**
+     * 获取所有数据的时间范围
+     *
+     * @return 所有数据的时间范围
+     */
+    @Override
+    public DateRangeVO getDateRange() {
+        List<Question> questions = questionMapper.selectList(null);
+
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+
+        for (Question question : questions) {
+            if (start == null || question.getCreationDate().isBefore(start)) {
+                start = question.getCreationDate();
+            }
+            if (end == null || question.getCreationDate().isAfter(end)) {
+                end = question.getCreationDate();
+            }
+        }
+
+        return DateRangeVO.builder()
+                .start(start)
+                .end(end)
+                .build();
+    }
+
+    /**
      * 获取前n个被高频讨论的错误和异常
      *
      * @param n     前n个
@@ -100,14 +127,14 @@ public class AnalysisServiceImpl implements AnalysisService {
             errorCountMap.forEach((key, value) -> mixedCountMap.put(key, mixedCountMap.getOrDefault(key, 0L) + value));
             exceptionCountMap.forEach((key, value) -> mixedCountMap.put(key, mixedCountMap.getOrDefault(key, 0L) + value));
             return mixedCountMap.entrySet().stream()
-                            .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
-                            .limit(n)
-                            .map(entry -> ThrowableVO.builder()
-                                    .name(entry.getKey())
-                                    .count(entry.getValue())
-                                    .percentage(totalMixedCount > 0 ? entry.getValue() * 100.0 / totalMixedCount : 0.0)
-                                    .build())
-                            .collect(Collectors.toList());
+                    .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
+                    .limit(n)
+                    .map(entry -> ThrowableVO.builder()
+                            .name(entry.getKey())
+                            .count(entry.getValue())
+                            .percentage(totalMixedCount > 0 ? entry.getValue() * 100.0 / totalMixedCount : 0.0)
+                            .build())
+                    .collect(Collectors.toList());
         }
 
         // 构建错误和异常的列表
@@ -220,6 +247,9 @@ public class AnalysisServiceImpl implements AnalysisService {
         Map<Long, Map<String, Object>> questionToData =
                 questions.stream().collect(Collectors.toMap(Question::getQuestionId, question -> Map.of(
                         "score", 0.0,
+                        "questionScore", 0.0,
+                        "answerScore", 0.0,
+                        "commentScore", 0.0,
                         "questionCount", 0,
                         "answerCount", 0,
                         "commentCount", 0
@@ -230,7 +260,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                 .filter(question -> userIds.contains(question.getOwnerUserId()))
                 .forEach(question -> {
                     Map<String, Object> data = new HashMap<>(questionToData.get(question.getQuestionId()));
-                    data.put("score", (double) data.get("score") + questionScore);
+                    data.put("questionScore", (double) data.get("questionScore") + questionScore);
                     data.put("questionCount", (int) data.get("questionCount") + 1);
                     questionToData.put(question.getQuestionId(), data);
                 });
@@ -239,7 +269,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                 .filter(answer -> userIds.contains(answer.getOwnerUserId()))
                 .forEach(answer -> {
                     Map<String, Object> data = new HashMap<>(questionToData.get(answer.getQuestionId()));
-                    data.put("score", (double) data.get("score") + answerScore);
+                    data.put("answerScore", (double) data.get("answerScore") + answerScore);
                     data.put("answerCount", (int) data.get("answerCount") + 1);
                     questionToData.put(answer.getQuestionId(), data);
                 });
@@ -257,10 +287,17 @@ public class AnalysisServiceImpl implements AnalysisService {
                         questionId = answerToQuestion.get(comment.getPostId());
                     }
                     Map<String, Object> data = new HashMap<>(questionToData.get(questionId));
-                    data.put("score", (double) data.get("score") + commentScore);
+                    data.put("commentScore", (double) data.get("commentScore") + commentScore);
                     data.put("commentCount", (int) data.get("commentCount") + 1);
                     questionToData.put(questionId, data);
                 });
+
+        // 相加得到总分
+        questionToData.keySet().forEach(questionId -> {
+            Map<String, Object> data = new HashMap<>(questionToData.get(questionId));
+            data.put("score", (double) data.get("questionScore") + (double) data.get("answerScore") + (double) data.get("commentScore"));
+            questionToData.put(questionId, data);
+        });
 
         List<QuestionTag> questionTags = questionTagMapper.selectList(
                 new LambdaQueryWrapper<QuestionTag>()
@@ -296,6 +333,9 @@ public class AnalysisServiceImpl implements AnalysisService {
                                 .tagId(tag.getTagId())
                                 .tagName(tag.getTagName())
                                 .score(0.0)
+                                .questionScore(0.0)
+                                .answerScore(0.0)
+                                .commentScore(0.0)
                                 .questionCount(0)
                                 .answerCount(0)
                                 .commentCount(0)
@@ -303,6 +343,9 @@ public class AnalysisServiceImpl implements AnalysisService {
                         tagToTopic.put(tag.getTagId(), topic);
                     }
                     topic.setScore(topic.getScore() + (double) data.get("score"));
+                    topic.setQuestionScore(topic.getQuestionScore() + (double) data.get("questionScore"));
+                    topic.setAnswerScore(topic.getAnswerScore() + (double) data.get("answerScore"));
+                    topic.setCommentScore(topic.getCommentScore() + (double) data.get("commentScore"));
                     topic.setQuestionCount(topic.getQuestionCount() + (int) data.get("questionCount"));
                     topic.setAnswerCount(topic.getAnswerCount() + (int) data.get("answerCount"));
                     topic.setCommentCount(topic.getCommentCount() + (int) data.get("commentCount"));
@@ -478,6 +521,106 @@ public class AnalysisServiceImpl implements AnalysisService {
                         .length(answer.getBody().length())
                         .build())
                 .toList();
+    }
+
+    /**
+     * 获取数据概览
+     *
+     * @return 数据概览
+     */
+    @Override
+    public OverviewVO getOverview() {
+        return OverviewVO.builder()
+                .questionCount(questionMapper.selectCount(null))
+                .answerCount(answerMapper.selectCount(null))
+                .commentCount(commentMapper.selectCount(null))
+                .userCount(userMapper.selectCount(null))
+                .build();
+    }
+
+    /**
+     * 获取question、answer、comment每个月新产生的数量
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return question、answer、comment每个月新产生的数量
+     */
+    @Override
+    public List<CountInSingleMonthVO> getCountInSingleMonth(LocalDateTime start, LocalDateTime end) {
+        if (start == null || end == null) {
+            DateRangeVO dateRange = getDateRange();
+            if (start == null) {
+                start = dateRange.getStart();
+            }
+            if (end == null) {
+                end = dateRange.getEnd();
+            }
+        }
+
+        List<Question> questions = questionMapper.selectList(
+                new LambdaQueryWrapper<Question>()
+                        .ge(Question::getCreationDate, start)
+                        .lt(Question::getCreationDate, end)
+        );
+
+        List<Answer> answers = answerMapper.selectList(
+                new LambdaQueryWrapper<Answer>()
+                        .ge(Answer::getCreationDate, start)
+                        .lt(Answer::getCreationDate, end)
+        );
+
+        List<Comment> comments = commentMapper.selectList(
+                new LambdaQueryWrapper<Comment>()
+                        .ge(Comment::getCreationDate, start)
+                        .lt(Comment::getCreationDate, end)
+        );
+
+        // 存储每个数据类型（问题、回答、评论）的统计结果
+        List<CountInSingleMonthVO> result = new ArrayList<>();
+
+        // 将数据按月分组并统计
+        Map<String, Integer> questionMonthlyCounts = groupByMonthAndCount(questions, start, end);
+        Map<String, Integer> answerMonthlyCounts = groupByMonthAndCount(answers, start, end);
+        Map<String, Integer> commentMonthlyCounts = groupByMonthAndCount(comments, start, end);
+
+        Set<String> allMonths = new HashSet<>();
+        allMonths.addAll(questionMonthlyCounts.keySet());
+        allMonths.addAll(answerMonthlyCounts.keySet());
+        allMonths.addAll(commentMonthlyCounts.keySet());
+
+        for (String month : allMonths) {
+            CountInSingleMonthVO vo = new CountInSingleMonthVO();
+            vo.setTime(month);
+            vo.setQuestionCount(questionMonthlyCounts.getOrDefault(month, 0));
+            vo.setAnswerCount(answerMonthlyCounts.getOrDefault(month, 0));
+            vo.setCommentCount(commentMonthlyCounts.getOrDefault(month, 0));
+            result.add(vo);
+        }
+
+        result.sort(Comparator.comparing(CountInSingleMonthVO::getTime));
+        return result;
+    }
+
+    private <T> Map<String, Integer> groupByMonthAndCount(List<T> data, LocalDateTime start, LocalDateTime end) {
+        Map<String, Integer> monthlyCounts = new HashMap<>();
+
+        for (T item : data) {
+            LocalDateTime creationDate = null;
+            if (item instanceof Question) {
+                creationDate = ((Question) item).getCreationDate();
+            } else if (item instanceof Answer) {
+                creationDate = ((Answer) item).getCreationDate();
+            } else if (item instanceof Comment) {
+                creationDate = ((Comment) item).getCreationDate();
+            }
+
+            if (creationDate != null && (creationDate.isAfter(start) || creationDate.isEqual(start)) && creationDate.isBefore(end)) {
+                String month = creationDate.toLocalDate().toString().substring(0, 7);
+                monthlyCounts.put(month, monthlyCounts.getOrDefault(month, 0) + 1);
+            }
+        }
+
+        return monthlyCounts;
     }
 
     /**

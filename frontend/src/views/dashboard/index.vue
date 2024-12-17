@@ -2,101 +2,155 @@
   <div class="dashboard-editor-container">
     <github-corner class="github-corner" />
 
-    <panel-group @handleSetLineChartData="handleSetLineChartData" />
+    <panel-group />
 
-    <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
+    <el-row style="background: #fff; padding: 16px 16px 0; margin-bottom: 32px">
       <line-chart :chart-data="lineChartData" />
-    </el-row>
-
-    <el-row :gutter="32">
-      <el-col :xs="24" :sm="24" :lg="8">
-        <div class="chart-wrapper">
-          <raddar-chart />
-        </div>
-      </el-col>
-      <el-col :xs="24" :sm="24" :lg="8">
-        <div class="chart-wrapper">
-          <pie-chart />
-        </div>
-      </el-col>
-      <el-col :xs="24" :sm="24" :lg="8">
-        <div class="chart-wrapper">
-          <bar-chart />
-        </div>
-      </el-col>
-    </el-row>
-
-    <el-row :gutter="8">
-      <el-col :xs="{span: 24}" :sm="{span: 24}" :md="{span: 24}" :lg="{span: 12}" :xl="{span: 12}" style="padding-right:8px;margin-bottom:30px;">
-        <transaction-table />
-      </el-col>
-      <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
-        <todo-list />
-      </el-col>
-      <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
-        <box-card />
-      </el-col>
+      <div class="chart-controls">
+        <label>
+          <input type="radio" value="monthly" v-model="timeScale" />
+          Monthly
+        </label>
+        <label>
+          <input type="radio" value="yearly" v-model="timeScale" />
+          Yearly
+        </label>
+      </div>
+      <TimeLine :width="'70vw'" @update:range="handleTimeRangeUpdate" />
     </el-row>
   </div>
 </template>
 
 <script>
-import GithubCorner from '@/components/GithubCorner'
-import PanelGroup from './components/PanelGroup'
-import LineChart from './components/LineChart'
-import RaddarChart from './components/RaddarChart'
-import PieChart from './components/PieChart'
-import BarChart from './components/BarChart'
-import TransactionTable from './components/TransactionTable'
-import TodoList from './components/TodoList'
-import BoxCard from './components/BoxCard'
-
-const lineChartData = {
-  newVisitis: {
-    expectedData: [100, 120, 161, 134, 105, 160, 165],
-    actualData: [120, 82, 91, 154, 162, 140, 145]
-  },
-  messages: {
-    expectedData: [200, 192, 120, 144, 160, 130, 140],
-    actualData: [180, 160, 151, 106, 145, 150, 130]
-  },
-  purchases: {
-    expectedData: [80, 100, 121, 104, 105, 90, 100],
-    actualData: [120, 90, 100, 138, 142, 130, 130]
-  },
-  shoppings: {
-    expectedData: [130, 140, 141, 142, 145, 150, 160],
-    actualData: [120, 82, 91, 154, 162, 140, 130]
-  }
-}
+import GithubCorner from "@/components/GithubCorner";
+import TimeLine from "@/components/TimeLine";
+import dayjs from "dayjs";
+import PanelGroup from "./components/PanelGroup";
+import LineChart from "./components/LineChart";
+import { getCountInSingleMonth } from "@/api/analysis";
 
 export default {
-  name: 'DashboardAdmin',
+  name: "DashboardAdmin",
   components: {
     GithubCorner,
+    TimeLine,
     PanelGroup,
     LineChart,
-    RaddarChart,
-    PieChart,
-    BarChart,
-    TransactionTable,
-    TodoList,
-    BoxCard
   },
   data() {
     return {
-      lineChartData: lineChartData.newVisitis
-    }
+      startDate: null,
+      endDate: null,
+      start: null,
+      end: null,
+      chartData: [],
+      lineChartData: [],
+      timeScale: "monthly",
+    };
+  },
+  watch: {
+    startDate(val) {
+      this.start = val ? dayjs(val).format("YYYY-MM-DD HH:mm") : null;
+      this.fetchData();
+    },
+    endDate() {
+      this.end = this.endDate
+        ? dayjs(this.endDate).format("YYYY-MM-DD HH:mm")
+        : null;
+      this.fetchData();
+    },
+    chartData: {
+      deep: true,
+      handler(val) {
+        this.processChartData(val);
+      },
+    },
+    timeScale() {
+      this.processChartData(this.chartData);
+    },
   },
   methods: {
-    handleSetLineChartData(type) {
-      this.lineChartData = lineChartData[type]
-    }
-  }
-}
+    handleTimeRangeUpdate(dateRange) {
+      this.startDate = dateRange["start"];
+      this.endDate = dateRange["end"];
+    },
+    async fetchData() {
+      const params = {
+        start: this.start,
+        end: this.end,
+      };
+
+      const { data } = await getCountInSingleMonth(params);
+      this.chartData = data;
+    },
+    // 处理图表数据：根据时间刻度（月或年）来聚合数据
+    processChartData(data) {
+      if (this.timeScale === "monthly") {
+        this.lineChartData = data.map((item) => ({
+          time: item.time,
+          questionCount: item.questionCount,
+          answerCount: item.answerCount,
+          commentCount: item.commentCount,
+        }));
+      } else {
+        // 按年显示，将每一年的数据合并
+        const aggregatedData = this.aggregateDataByYear(data);
+        this.lineChartData = aggregatedData;
+      }
+    },
+
+    // 按年份聚合数据
+    aggregateDataByYear(data) {
+      const aggregatedData = [];
+      const groupedByYear = {};
+
+      data.forEach((item) => {
+        const year = item.time.split("-")[0];
+        if (!groupedByYear[year]) {
+          groupedByYear[year] = {
+            time: year,
+            questionCount: 0,
+            answerCount: 0,
+            commentCount: 0,
+          };
+        }
+
+        groupedByYear[year].questionCount += item.questionCount;
+        groupedByYear[year].answerCount += item.answerCount;
+        groupedByYear[year].commentCount += item.commentCount;
+      });
+      for (const year in groupedByYear) {
+        aggregatedData.push(groupedByYear[year]);
+      }
+
+      return aggregatedData;
+    },
+  },
+  async created() {
+    await this.fetchData();
+    // console.log(this.lineChartData);
+  },
+};
 </script>
 
 <style lang="scss" scoped>
+.chart-controls {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.chart-controls label {
+  margin-left: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.chart-controls input[type="radio"] {
+  margin-right: 5px;
+  cursor: pointer;
+}
+
 .dashboard-editor-container {
   padding: 32px;
   background-color: rgb(240, 242, 245);
@@ -116,7 +170,7 @@ export default {
   }
 }
 
-@media (max-width:1024px) {
+@media (max-width: 1024px) {
   .chart-wrapper {
     padding: 8px;
   }

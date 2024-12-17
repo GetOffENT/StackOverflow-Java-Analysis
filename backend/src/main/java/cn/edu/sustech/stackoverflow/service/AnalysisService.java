@@ -5,6 +5,7 @@ import cn.edu.sustech.stackoverflow.entity.vo.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -15,6 +16,13 @@ import java.util.List;
  * @since 2024-12-15 9:47
  */
 public interface AnalysisService {
+
+    /**
+     * 获取所有数据的时间范围
+     *
+     * @return 所有数据的时间范围
+     */
+    DateRangeVO getDateRange();
 
     /**
      * 获取前n个被高频讨论的错误和异常
@@ -79,4 +87,20 @@ public interface AnalysisService {
      * @return 回答信息及回答长度
      */
     List<AnswerWithLengthVO> getAnswersWithLength(LocalDateTime start, LocalDateTime end);
+
+    /**
+     * 获取数据概览
+     *
+     * @return 数据概览
+     */
+    OverviewVO getOverview();
+
+    /**
+     * 获取question、answer、comment每个月新产生的数量
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return question、answer、comment每个月新产生的数量
+     */
+    List<CountInSingleMonthVO> getCountInSingleMonth(LocalDateTime start, LocalDateTime end);
 }

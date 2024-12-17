@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -38,6 +39,44 @@ public class AnalysisController {
 
     private final TagService tagService;
 
+    /**
+     * 获取数据概览
+     *
+     * @return 数据概览
+     */
+    @GetMapping("/overview")
+    @Operation(summary = "获取数据概览")
+    public Result<OverviewVO> getOverview() {
+        log.info("获取数据概览");
+        return Result.success(analysisService.getOverview());
+    }
+
+    /**
+     * 获取question、answer、comment每个月新产生的数量
+     *
+     * @return question、answer、comment每个月新产生的数量
+     */
+    @GetMapping("/overview/2")
+    @Operation(summary = "获取question、answer、comment、user每个月新产生的数量")
+    public Result<List<CountInSingleMonthVO>> getCountInSingleMonth(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
+    ) {
+        log.info("获取question、answer、comment、user每个月新产生的数量");
+        return Result.success(analysisService.getCountInSingleMonth(start, end));
+    }
+
+    /**
+     * 获取所有数据的时间范围
+     *
+     * @return 所有数据的时间范围
+     */
+    @GetMapping("/date-range")
+    @Operation(summary = "获取所有数据的时间范围")
+    public Result<DateRangeVO> getDateRange() {
+        log.info("获取所有数据的时间范围");
+        return Result.success(analysisService.getDateRange());
+    }
 
     /**
      * 根据标签名获取对应标签数据
@@ -120,7 +159,7 @@ public class AnalysisController {
             @RequestParam Integer n,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end,
-            @RequestParam(required = false) Boolean mixed
+            @RequestParam(required = false, defaultValue = "false") Boolean mixed
     ) {
         log.info("获取前n个被讨论的高频错误和异常 n:{}", n);
         return Result.success(analysisService.getTopNErrorsAndExceptions(n, start, end, mixed));
