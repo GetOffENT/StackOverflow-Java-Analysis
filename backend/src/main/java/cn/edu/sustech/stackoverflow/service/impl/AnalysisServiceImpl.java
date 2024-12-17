@@ -127,14 +127,14 @@ public class AnalysisServiceImpl implements AnalysisService {
             errorCountMap.forEach((key, value) -> mixedCountMap.put(key, mixedCountMap.getOrDefault(key, 0L) + value));
             exceptionCountMap.forEach((key, value) -> mixedCountMap.put(key, mixedCountMap.getOrDefault(key, 0L) + value));
             return mixedCountMap.entrySet().stream()
-                            .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
-                            .limit(n)
-                            .map(entry -> ThrowableVO.builder()
-                                    .name(entry.getKey())
-                                    .count(entry.getValue())
-                                    .percentage(totalMixedCount > 0 ? entry.getValue() * 100.0 / totalMixedCount : 0.0)
-                                    .build())
-                            .collect(Collectors.toList());
+                    .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
+                    .limit(n)
+                    .map(entry -> ThrowableVO.builder()
+                            .name(entry.getKey())
+                            .count(entry.getValue())
+                            .percentage(totalMixedCount > 0 ? entry.getValue() * 100.0 / totalMixedCount : 0.0)
+                            .build())
+                    .collect(Collectors.toList());
         }
 
         // 构建错误和异常的列表
@@ -521,6 +521,105 @@ public class AnalysisServiceImpl implements AnalysisService {
                         .length(answer.getBody().length())
                         .build())
                 .toList();
+    }
+
+    /**
+     * 获取数据概览
+     *
+     * @return 数据概览
+     */
+    @Override
+    public OverviewVO getOverview() {
+        return OverviewVO.builder()
+                .questionCount(questionMapper.selectCount(null))
+                .answerCount(answerMapper.selectCount(null))
+                .commentCount(commentMapper.selectCount(null))
+                .userCount(userMapper.selectCount(null))
+                .build();
+    }
+
+    /**
+     * 获取question、answer、comment每个月新产生的数量
+     *
+     * @param start 开始时间
+     * @param end   结束时间
+     * @return question、answer、comment每个月新产生的数量
+     */
+    @Override
+    public Map<String, List<CountInSingleMonthVO>> getCountInSingleMonth(LocalDateTime start, LocalDateTime end) {
+        if (start == null || end == null) {
+            DateRangeVO dateRange = getDateRange();
+            if (start == null) {
+                start = dateRange.getStart();
+            }
+            if (end == null) {
+                end = dateRange.getEnd();
+            }
+        }
+
+        List<Question> questions = questionMapper.selectList(
+                new LambdaQueryWrapper<Question>()
+                        .ge(Question::getCreationDate, start)
+                        .lt(Question::getCreationDate, end)
+        );
+
+        List<Answer> answers = answerMapper.selectList(
+                new LambdaQueryWrapper<Answer>()
+                        .ge(Answer::getCreationDate, start)
+                        .lt(Answer::getCreationDate, end)
+        );
+
+        List<Comment> comments = commentMapper.selectList(
+                new LambdaQueryWrapper<Comment>()
+                        .ge(Comment::getCreationDate, start)
+                        .lt(Comment::getCreationDate, end)
+        );
+
+        // 存储每个数据类型（问题、回答、评论）的统计结果
+        Map<String, List<CountInSingleMonthVO>> result = new HashMap<>();
+
+        // 将数据按月分组并统计
+        List<CountInSingleMonthVO> questionCounts = groupByMonthAndCount(questions, start, end);
+        List<CountInSingleMonthVO> answerCounts = groupByMonthAndCount(answers, start, end);
+        List<CountInSingleMonthVO> commentCounts = groupByMonthAndCount(comments, start, end);
+
+        result.put("questions", questionCounts);
+        result.put("answers", answerCounts);
+        result.put("comments", commentCounts);
+
+        return result;
+    }
+
+    private <T> List<CountInSingleMonthVO> groupByMonthAndCount(List<T> data, LocalDateTime start, LocalDateTime end) {
+        // 存储每个月的计数
+        List<CountInSingleMonthVO> counts = new ArrayList<>();
+
+        // 遍历数据按月统计
+        Map<String, Integer> monthlyCounts = new HashMap<>();
+        for (T item : data) {
+            LocalDateTime creationDate = null;
+            if (item instanceof Question) {
+                creationDate = ((Question) item).getCreationDate();
+            } else if (item instanceof Answer) {
+                creationDate = ((Answer) item).getCreationDate();
+            } else if (item instanceof Comment) {
+                creationDate = ((Comment) item).getCreationDate();
+            }
+
+            if (creationDate != null && (creationDate.isAfter(start) || creationDate.isEqual(start)) && creationDate.isBefore(end)) {
+                String month = creationDate.toLocalDate().toString().substring(0, 7);
+                monthlyCounts.put(month, monthlyCounts.getOrDefault(month, 0) + 1);
+            }
+        }
+
+        // 将统计结果转换成CountInSingleMonthVO对象
+        for (Map.Entry<String, Integer> entry : monthlyCounts.entrySet()) {
+            counts.add(new CountInSingleMonthVO(entry.getValue(), entry.getKey()));
+        }
+
+        counts.sort(Comparator.comparing(CountInSingleMonthVO::getTime));
+
+        return counts;
     }
 
     /**
