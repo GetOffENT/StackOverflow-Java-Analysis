@@ -7,6 +7,21 @@ export function getDateRange() {
   });
 }
 
+export function getOverview() {
+  return request({
+    url: "/analysis/overview",
+    method: "get",
+  });
+}
+
+export function getCountInSingleMonth(params) {
+  return request({
+    url: "/analysis/overview/2",
+    method: "get",
+    params,
+  });
+}
+
 export function getTopNTopicsByEngagementOfUserWithHigherReputation(params) {
   return request({
     url: "/analysis/topic/engagement/top",
