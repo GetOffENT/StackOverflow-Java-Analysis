@@ -3,158 +3,171 @@
 </template>
 
 <script>
-import echarts from 'echarts'
-require('echarts/theme/macarons') // echarts theme
-import resize from './mixins/resize'
+import echarts from "echarts";
+require("echarts/theme/macarons"); // echarts theme
 
 export default {
-  mixins: [resize],
   props: {
     className: {
       type: String,
-      default: 'chart'
+      default: "chart",
     },
     width: {
       type: String,
-      default: '100%'
+      default: "100%",
     },
     height: {
       type: String,
-      default: '350px'
+      default: "350px",
     },
     autoResize: {
       type: Boolean,
-      default: true
+      default: true,
     },
     chartData: {
       type: Array,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
-      chart: null
-    }
+      chart: null,
+      resizeTimeout: null,
+    };
   },
   watch: {
     chartData: {
       deep: true,
       handler(val) {
-        this.setOptions(val)
-      }
-    }
+        this.setOptions(val);
+      },
+    },
   },
   mounted() {
     this.$nextTick(() => {
-      this.initChart()
-    })
+      this.initChart();
+    });
+    window.addEventListener("resize", this.debounceResize);
   },
   beforeDestroy() {
     if (!this.chart) {
-      return
+      return;
     }
-    this.chart.dispose()
-    this.chart = null
+    this.chart.dispose();
+    this.chart = null;
+    window.removeEventListener("resize", this.debounceResize);
   },
   methods: {
+    handleResize() {
+      if (this.chart) {
+        this.chart.dispose();
+        this.initChart();
+      }
+    },
+    debounceResize() {
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = setTimeout(() => {
+        this.handleResize();
+      }, 500);
+    },
     initChart() {
-      this.chart = echarts.init(this.$el, 'macarons')
-      this.setOptions(this.chartData)
+      this.chart = echarts.init(this.$el, "macarons");
+      this.setOptions(this.chartData);
     },
     setOptions(data) {
-      const timeData = data.map(item => item.time)
-      const questionCountData = data.map(item => item.questionCount)
-      const answerCountData = data.map(item => item.answerCount)
-      const commentCountData = data.map(item => item.commentCount)
+      const timeData = data.map((item) => item.time);
+      const questionCountData = data.map((item) => item.questionCount);
+      const answerCountData = data.map((item) => item.answerCount);
+      const commentCountData = data.map((item) => item.commentCount);
 
       this.chart.setOption({
         xAxis: {
           data: timeData, // 使用时间数据
           boundaryGap: false,
           axisTick: {
-            show: false
-          }
+            show: false,
+          },
         },
         grid: {
           left: 10,
           right: 10,
           bottom: 20,
           top: 30,
-          containLabel: true
+          containLabel: true,
         },
         tooltip: {
-          trigger: 'axis',
+          trigger: "axis",
           axisPointer: {
-            type: 'cross'
+            type: "cross",
           },
-          padding: [5, 10]
+          padding: [5, 10],
         },
         yAxis: {
           axisTick: {
-            show: false
-          }
+            show: false,
+          },
         },
         legend: {
-          data: ['Question Count', 'Answer Count', 'Comment Count']
+          data: ["Question Count", "Answer Count", "Comment Count"],
         },
         grid: {
           right: 20,
         },
         series: [
           {
-            name: 'Question Count',
+            name: "Question Count",
             itemStyle: {
               normal: {
-                color: '#FF005A',
+                color: "#FF005A",
                 lineStyle: {
-                  color: '#FF005A',
-                  width: 2
-                }
-              }
+                  color: "#FF005A",
+                  width: 2,
+                },
+              },
             },
             smooth: true,
-            type: 'line',
+            type: "line",
             data: questionCountData,
             animationDuration: 2800,
-            animationEasing: 'cubicInOut'
+            animationEasing: "cubicInOut",
           },
           {
-            name: 'Answer Count',
+            name: "Answer Count",
             smooth: true,
-            type: 'line',
+            type: "line",
             itemStyle: {
               normal: {
-                color: '#3888fa',
+                color: "#3888fa",
                 lineStyle: {
-                  color: '#3888fa',
-                  width: 2
-                }
-              }
+                  color: "#3888fa",
+                  width: 2,
+                },
+              },
             },
             data: answerCountData,
             animationDuration: 2800,
-            animationEasing: 'cubicInOut'
+            animationEasing: "cubicInOut",
           },
           {
-            name: 'Comment Count',
+            name: "Comment Count",
             smooth: true,
-            type: 'line',
+            type: "line",
             itemStyle: {
               normal: {
-                color: '#FF9F00',
+                color: "#FF9F00",
                 lineStyle: {
-                  color: '#FF9F00',
-                  width: 2
-                }
-              }
+                  color: "#FF9F00",
+                  width: 2,
+                },
+              },
             },
             data: commentCountData,
             animationDuration: 2800,
-            animationEasing: 'quadraticOut'
-          }
-        ]
-      })
-    }
-  }
-}
+            animationEasing: "quadraticOut",
+          },
+        ],
+      });
+    },
+  },
+};
 </script>
