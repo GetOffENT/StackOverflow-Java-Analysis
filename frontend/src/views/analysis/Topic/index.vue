@@ -17,7 +17,7 @@
         <el-date-picker v-model="endDate" type="date" placeholder="end date" />
       </el-form-item>
       <!-- 显示数量输入框 -->
-      <el-form-item label="count">
+      <el-form-item label="top N">
         <el-input-number
           v-model="topN"
           :min="2"

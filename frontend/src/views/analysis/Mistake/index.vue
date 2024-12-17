@@ -4,7 +4,7 @@
       Top N errors frequently discussed errors and exceptions
     </h1>
     <el-form :inline="true" class="form" style="justify-self: center">
-      <el-form-item label="count" style="margin-right: 30px">
+      <el-form-item label="top N" style="margin-right: 30px">
         <el-input-number
           v-model="topN"
           :min="2"

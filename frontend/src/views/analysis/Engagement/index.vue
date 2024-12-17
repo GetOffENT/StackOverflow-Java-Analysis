@@ -2,7 +2,7 @@
   <div class="chart-container">
     <h1 style="font-size: 26px;">Top N Topics with the Most User Engagement from High-Reputation Users</h1>
     <el-form :inline="true" class="form" style="justify-self: center">
-      <el-form-item label="count" style="margin-right: 30px">
+      <el-form-item label="top N" style="margin-right: 30px">
         <el-input-number
           v-model="topN"
           :min="2"
