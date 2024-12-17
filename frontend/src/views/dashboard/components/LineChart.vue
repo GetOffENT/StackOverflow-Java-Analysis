@@ -1,5 +1,5 @@
 <template>
-  <div :class="className" :style="{height:height,width:width}" />
+  <div :class="className" :style="{ height: height, width: width }" />
 </template>
 
 <script>
@@ -27,7 +27,7 @@ export default {
       default: true
     },
     chartData: {
-      type: Object,
+      type: Array,
       required: true
     }
   },
@@ -61,10 +61,15 @@ export default {
       this.chart = echarts.init(this.$el, 'macarons')
       this.setOptions(this.chartData)
     },
-    setOptions({ expectedData, actualData } = {}) {
+    setOptions(data) {
+      const timeData = data.map(item => item.time)
+      const questionCountData = data.map(item => item.questionCount)
+      const answerCountData = data.map(item => item.answerCount)
+      const commentCountData = data.map(item => item.commentCount)
+
       this.chart.setOption({
         xAxis: {
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          data: timeData, // 使用时间数据
           boundaryGap: false,
           axisTick: {
             show: false
@@ -90,44 +95,64 @@ export default {
           }
         },
         legend: {
-          data: ['expected', 'actual']
+          data: ['Question Count', 'Answer Count', 'Comment Count']
         },
-        series: [{
-          name: 'expected', itemStyle: {
-            normal: {
-              color: '#FF005A',
-              lineStyle: {
+        grid: {
+          right: 20,
+        },
+        series: [
+          {
+            name: 'Question Count',
+            itemStyle: {
+              normal: {
                 color: '#FF005A',
-                width: 2
+                lineStyle: {
+                  color: '#FF005A',
+                  width: 2
+                }
               }
-            }
+            },
+            smooth: true,
+            type: 'line',
+            data: questionCountData,
+            animationDuration: 2800,
+            animationEasing: 'cubicInOut'
           },
-          smooth: true,
-          type: 'line',
-          data: expectedData,
-          animationDuration: 2800,
-          animationEasing: 'cubicInOut'
-        },
-        {
-          name: 'actual',
-          smooth: true,
-          type: 'line',
-          itemStyle: {
-            normal: {
-              color: '#3888fa',
-              lineStyle: {
+          {
+            name: 'Answer Count',
+            smooth: true,
+            type: 'line',
+            itemStyle: {
+              normal: {
                 color: '#3888fa',
-                width: 2
-              },
-              areaStyle: {
-                color: '#f3f8ff'
+                lineStyle: {
+                  color: '#3888fa',
+                  width: 2
+                }
               }
-            }
+            },
+            data: answerCountData,
+            animationDuration: 2800,
+            animationEasing: 'cubicInOut'
           },
-          data: actualData,
-          animationDuration: 2800,
-          animationEasing: 'quadraticOut'
-        }]
+          {
+            name: 'Comment Count',
+            smooth: true,
+            type: 'line',
+            itemStyle: {
+              normal: {
+                color: '#FF9F00',
+                lineStyle: {
+                  color: '#FF9F00',
+                  width: 2
+                }
+              }
+            },
+            data: commentCountData,
+            animationDuration: 2800,
+            animationEasing: 'quadraticOut'
+          }
+        ]
       })
     }
   }
