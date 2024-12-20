@@ -18,7 +18,7 @@
       </el-form-item>
       <!-- 显示数量输入框 -->
       <el-form-item label="top N">
-        <el-input-number v-model="topN" :min="2" :max="2000" @change="search" />
+        <el-input-number v-model="topN" :min="2" @change="debounceCountChange" />
       </el-form-item>
 
       <!-- 查询按钮 -->
@@ -105,6 +105,7 @@ export default {
         "#FBE9B4",
         "#FF4AB6",
       ],
+      countTimeout: null,
     };
   },
   async mounted() {
@@ -126,6 +127,18 @@ export default {
     },
   },
   methods: {
+    debounceCountChange() {
+      clearTimeout(this.countTimeout);
+      this.countTimeout = setTimeout(() => {
+        this.search();
+      }, 200);
+    },
+    debouncePercentageChange() {
+      clearTimeout(this.percentageTimeout);
+      this.percentageTimeout = setTimeout(() => {
+        this.initChart(false);
+      }, 200);
+    },
     async search() {
       if (this.currentClick === "static") {
         this.staticChart();
