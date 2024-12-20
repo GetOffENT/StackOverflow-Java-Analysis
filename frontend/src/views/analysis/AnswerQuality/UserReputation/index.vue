@@ -3,7 +3,11 @@
     <h1 style="justify-self: center; margin-bottom: 30px">
       Answer Quality and Its Relation to User Reputation
     </h1>
-    <TimeLine :width="'70vw'" @update:range="handleTimeRangeUpdate" :disabled="disabled"/>
+    <TimeLine
+      :width="'70vw'"
+      @update:range="handleTimeRangeUpdate"
+      :disabled="disabled"
+    />
     <div class="scatter-chart">
       <h3 style="justify-self: center; color: #606266">
         Scatter Plot of Answer Data: Upvotes vs User Reputation
@@ -29,6 +33,7 @@ export default {
       start: null,
       end: null,
       answerWithUserReputationData: [],
+      displayedData: [],
       scatterChart: null,
       resizeTimeout: null,
       disabled: false,
@@ -46,7 +51,7 @@ export default {
 
       this.fetchData();
     },
-    answerWithUserReputationData: {
+    displayedData: {
       handler() {
         this.initScatterChart();
       },
@@ -90,13 +95,26 @@ export default {
       });
       this.disabled = true;
 
-      const params = {
-        start: this.start,
-        end: this.end,
-      };
+      if (!this.answerWithUserReputationData.length) {
+        const params = {
+          start: this.start,
+          end: this.end,
+        };
 
-      const res = await getAnswersWithUserReputation(params);
-      this.answerWithUserReputationData = res.data;
+        const res = await getAnswersWithUserReputation(params);
+        this.answerWithUserReputationData = res.data;
+      }
+      if (this.start && this.end) {
+        this.displayedData = this.answerWithUserReputationData.filter(
+          (item) =>
+            dayjs(item.answerCreateDate).isAfter(this.start) &&
+            dayjs(item.answerCreateDate).isBefore(this.end)
+        );
+      } else {
+        this.displayedData = JSON.parse(
+          JSON.stringify(this.answerWithUserReputationData)
+        );
+      }
 
       this.disabled = false;
       this.scatterChart.hideLoading();
@@ -149,7 +167,7 @@ export default {
           {
             name: "Accepted",
             type: "scatter",
-            data: this.answerWithUserReputationData
+            data: this.displayedData
               .filter((item) => item.isAccepted)
               .map((item) => ({
                 value: [item.reputation, item.upVoteCount],
@@ -161,7 +179,7 @@ export default {
           {
             name: "Not Accepted",
             type: "scatter",
-            data: this.answerWithUserReputationData
+            data: this.displayedData
               .filter((item) => !item.isAccepted)
               .map((item) => ({
                 value: [item.reputation, item.upVoteCount],

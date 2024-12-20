@@ -3,7 +3,11 @@
     <h1 style="justify-self: center; margin-bottom: 30px">
       Answer Quality and Its Relation to Answer Length
     </h1>
-    <TimeLine :width="'70vw'" @update:range="handleTimeRangeUpdate" :disabled="disabled" />
+    <TimeLine
+      :width="'70vw'"
+      @update:range="handleTimeRangeUpdate"
+      :disabled="disabled"
+    />
     <div class="scatter-chart">
       <h3 style="justify-self: center; color: #606266">
         Scatter Plot of Answer Data: Upvotes vs Answer Length
@@ -29,6 +33,7 @@ export default {
       start: null,
       end: null,
       answersWithLength: [],
+      displayedData: [],
       scatterChart: null,
       resizeTimeout: null,
       disabled: false,
@@ -49,7 +54,7 @@ export default {
 
       this.fetchData();
     },
-    answersWithLength: {
+    displayedData: {
       handler() {
         this.initScatterChart();
       },
@@ -90,13 +95,26 @@ export default {
       });
       this.disabled = true;
 
-      const params = {
-        start: this.start,
-        end: this.end,
-      };
+      if (!this.answersWithLength.length) {
+        const params = {
+          start: this.start,
+          end: this.end,
+        };
 
-      const res = await getAnswersWithLength(params);
-      this.answersWithLength = res.data;
+        const res = await getAnswersWithLength(params);
+        this.answersWithLength = res.data;
+      }
+      if (this.start && this.end) {
+        this.displayedData = this.answersWithLength.filter(
+          (item) =>
+            dayjs(item.answerCreateDate).isAfter(this.start) &&
+            dayjs(item.answerCreateDate).isBefore(this.end)
+        );
+      } else {
+        this.displayedData = JSON.parse(
+          JSON.stringify(this.answersWithLength)
+        );
+      }
 
       this.disabled = false;
       this.scatterChart.hideLoading();
@@ -152,7 +170,7 @@ export default {
           {
             name: "Accepted",
             type: "scatter",
-            data: this.answersWithLength
+            data: this.displayedData
               .filter((item) => item.isAccepted)
               .map((item) => ({
                 value: [item.length, item.upVoteCount],
@@ -164,7 +182,7 @@ export default {
           {
             name: "Not Accepted",
             type: "scatter",
-            data: this.answersWithLength
+            data: this.displayedData
               .filter((item) => !item.isAccepted)
               .map((item) => ({
                 value: [item.length, item.upVoteCount],

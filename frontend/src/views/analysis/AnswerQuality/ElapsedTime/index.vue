@@ -1,9 +1,14 @@
 <template>
   <div>
     <h1 style="justify-self: center; margin-bottom: 30px">
-      Answer Quality and Its Relation to the elapsed time between question and answer creation
+      Answer Quality and Its Relation to the elapsed time between question and
+      answer creation
     </h1>
-    <TimeLine :width="'70vw'" @update:range="handleTimeRangeUpdate" :disabled="disabled"/>
+    <TimeLine
+      :width="'70vw'"
+      @update:range="handleTimeRangeUpdate"
+      :disabled="disabled"
+    />
     <div class="pie-chart-container">
       <div class="pie-chart-left-contaniner">
         <h3 style="justify-self: center; color: #606266">
@@ -26,7 +31,7 @@
         ></div>
       </div>
     </div>
-    <div class="scatter-chart">
+    <div class="bottom-chart-contaniner">
       <h3 style="justify-self: center; color: #606266">
         Scatter Plot of Answer Data: Upvotes vs Duration
       </h3>
@@ -55,10 +60,13 @@ export default {
       start: null,
       end: null,
       acceptedAnswerData: [],
+      displayedAcceptedAnswerData: [],
       pieAcceptedAnswerData: [],
       firstAnswerData: [],
+      displayedFirstAnswerData: [],
       pieFirstAnswerData: [],
       allAnswerData: [],
+      displayedAllAnswerData: [],
       height: "300px",
       pieChart1: null,
       pieChart2: null,
@@ -80,7 +88,7 @@ export default {
         : null;
       this.fetchData();
     },
-    acceptedAnswerData: {
+    displayedAcceptedAnswerData: {
       handler(val) {
         let temp = val.reduce(
           (acc, item) => {
@@ -101,7 +109,7 @@ export default {
       },
       deep: true,
     },
-    firstAnswerData: {
+    displayedFirstAnswerData: {
       handler(val) {
         let temp = val.reduce(
           (acc, item) => {
@@ -122,7 +130,7 @@ export default {
       },
       deep: true,
     },
-    allAnswerData: {
+    displayedAllAnswerData: {
       handler() {
         this.initScatterChart();
       },
@@ -134,7 +142,11 @@ export default {
   },
   computed: {
     disabled() {
-      return this.loadingAcceptedAnswer || this.loadingFirstAnswer || this.loadingAllAnswer;
+      return (
+        this.loadingAcceptedAnswer ||
+        this.loadingFirstAnswer ||
+        this.loadingAllAnswer
+      );
     },
   },
   mounted() {
@@ -286,7 +298,7 @@ export default {
           {
             name: "Accepted & First",
             type: "scatter",
-            data: this.allAnswerData
+            data: this.displayedAllAnswerData
               .filter((item) => item.isAccepted && item.first)
               .map((item) => ({
                 value: [toDays(item.duration), item.upVoteCount],
@@ -298,7 +310,7 @@ export default {
           {
             name: "Accepted & Not First",
             type: "scatter",
-            data: this.allAnswerData
+            data: this.displayedAllAnswerData
               .filter((item) => item.isAccepted && !item.first)
               .map((item) => ({
                 value: [toDays(item.duration), item.upVoteCount],
@@ -310,7 +322,7 @@ export default {
           {
             name: "First & Not Accepted",
             type: "scatter",
-            data: this.allAnswerData
+            data: this.displayedAllAnswerData
               .filter((item) => !item.isAccepted && item.first)
               .map((item) => ({
                 value: [toDays(item.duration), item.upVoteCount],
@@ -322,7 +334,7 @@ export default {
           {
             name: "Not Accepted & Not First",
             type: "scatter",
-            data: this.allAnswerData
+            data: this.displayedAllAnswerData
               .filter((item) => !item.isAccepted && !item.first)
               .map((item) => ({
                 value: [toDays(item.duration), item.upVoteCount],
@@ -342,7 +354,7 @@ export default {
         maskColor: "rgba(255, 255, 255, 0.8)",
         zlevel: 0,
       });
-    } ,
+    },
     fetchData() {
       this.fetchAcceptedAnswers();
       this.fetchFirstAnswers();
@@ -355,13 +367,26 @@ export default {
       this.showLoading(this.pieChart1);
       this.loadingAcceptedAnswer = true;
 
-      const params = {
-        start: this.start,
-        end: this.end,
-      };
+      if (!this.acceptedAnswerData.length) {
+        const params = {
+          start: this.start,
+          end: this.end,
+        };
 
-      const res = await getAcceptedAnswersWithCreateDate(params);
-      this.acceptedAnswerData = res.data;
+        const res = await getAcceptedAnswersWithCreateDate(params);
+        this.acceptedAnswerData = res.data;
+      }
+      if (this.start && this.end) {
+        this.displayedAcceptedAnswerData = this.acceptedAnswerData.filter(
+          (item) =>
+            dayjs(item.answerCreateDate).isAfter(this.start) &&
+            dayjs(item.answerCreateDate).isBefore(this.end)
+        );
+      } else {
+        this.displayedAcceptedAnswerData = JSON.parse(
+          JSON.stringify(this.acceptedAnswerData)
+        );
+      }
 
       this.loadingAcceptedAnswer = false;
       this.pieChart1.hideLoading();
@@ -373,13 +398,26 @@ export default {
       this.showLoading(this.pieChart2);
       this.loadingFirstAnswer = true;
 
-      const params = {
-        start: this.start,
-        end: this.end,
-      };
+      if (!this.firstAnswerData.length) {
+        const params = {
+          start: this.start,
+          end: this.end,
+        };
 
-      const res = await getFirstAnswersWithCreateDate(params);
-      this.firstAnswerData = res.data;
+        const res = await getFirstAnswersWithCreateDate(params);
+        this.firstAnswerData = res.data;
+      }
+      if (this.start && this.end) {
+        this.displayedFirstAnswerData = this.firstAnswerData.filter(
+          (item) =>
+            dayjs(item.answerCreateDate).isAfter(this.start) &&
+            dayjs(item.answerCreateDate).isBefore(this.end)
+        );
+      } else {
+        this.displayedFirstAnswerData = JSON.parse(
+          JSON.stringify(this.firstAnswerData)
+        );
+      }
 
       this.loadingFirstAnswer = false;
       this.pieChart2.hideLoading();
@@ -390,14 +428,27 @@ export default {
       }
       this.showLoading(this.scatterChart);
       this.loadingAllAnswer = true;
-      
-      const params = {
-        start: this.start,
-        end: this.end,
-      };
 
-      const res = await getAnswersWithCreateDate(params);
-      this.allAnswerData = res.data;
+      if (!this.allAnswerData.length) {
+        const params = {
+          start: this.start,
+          end: this.end,
+        };
+
+        const res = await getAnswersWithCreateDate(params);
+        this.allAnswerData = res.data;
+      }
+      if (this.start && this.end) {
+        this.displayedAllAnswerData = this.allAnswerData.filter(
+          (item) =>
+            dayjs(item.answerCreateDate).isAfter(this.start) &&
+            dayjs(item.answerCreateDate).isBefore(this.end)
+        );
+      } else {
+        this.displayedAllAnswerData = JSON.parse(
+          JSON.stringify(this.allAnswerData)
+        );
+      }
 
       this.loadingAllAnswer = false;
       this.scatterChart.hideLoading();
