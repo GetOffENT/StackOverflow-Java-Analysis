@@ -1,6 +1,8 @@
 <template>
   <div class="chart-container">
-    <h1 style="font-size: 26px;">Top N Topics with the Most User Engagement from High-Reputation Users</h1>
+    <h1 style="font-size: 26px">
+      Top N Topics with the Most User Engagement from High-Reputation Users
+    </h1>
     <el-form :inline="true" class="form" style="justify-self: center">
       <el-form-item label="top N" style="margin-right: 30px">
         <el-input-number
@@ -132,9 +134,19 @@ export default {
       this.chartData = res.data;
     },
     async initChart(resize = false) {
+      this.barChart.showLoading({
+        text: "Loading...",
+        color: "#5470C6",
+        textColor: "#000",
+        maskColor: "rgba(255, 255, 255, 0.8)",
+        zlevel: 0,
+      });
+
       if (!resize) {
         await this.fetchChartData();
       }
+
+      this.barChart.hideLoading();
 
       const chartWidth = this.chartData.length * 150;
       this.$refs.chart.style.width = `${chartWidth}px`;
@@ -150,15 +162,16 @@ export default {
       }
 
       this.barChart = echarts.init(this.$refs.chart, "macarons");
+
       const chartOption = {
         tooltip: {
           trigger: "axis",
           axisPointer: { type: "shadow" },
         },
         legend: {
-          top: '0',
+          top: "0",
           data: ["Question Score", "Answer Score", "Comment Score"],
-          orient: 'horizontal',
+          orient: "horizontal",
         },
         grid: {
           left: "3%",
@@ -211,6 +224,10 @@ export default {
     },
   },
   mounted() {
+    // 设置初始属性便于显示加载动画
+    this.$refs.chart.style.width = `100%`;
+    this.$refs.chart.style.height = "500px";
+    this.barChart = echarts.init(this.$refs.chart, "macarons");
     this.initChart(false);
     window.addEventListener("resize", this.debounceResize);
   },

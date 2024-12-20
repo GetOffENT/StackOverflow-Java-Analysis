@@ -21,6 +21,7 @@
             :chartData="exceptionData"
             :type="'exceptions'"
             :title="'Exceptions'"
+            :loading="loading"
           />
         </div>
         <div class="top-right-contaniner">
@@ -28,6 +29,7 @@
             :chartData="errorData"
             :type="'errors'"
             :title="'Errors'"
+            :loading="loading"
           />
         </div>
       </div>
@@ -36,6 +38,7 @@
           :chartData="mixedData"
           :type="'errors and exceptions'"
           :title="'Exceptions and Errors together'"
+          :loading="loading"
         />
       </div>
     </div>
@@ -63,6 +66,7 @@ export default {
       topN: 10,
       startDate: null,
       endDate: null,
+      loading: false,
     };
   },
   methods: {

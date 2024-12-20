@@ -35,6 +35,10 @@ export default {
       type: String,
       default: "500px",
     },
+    loading: {
+      type: Boolean,
+      default: false,
+    },
   },
   watch: {
     chartData: {
@@ -42,6 +46,29 @@ export default {
         this.initChart();
       },
       deep: true,
+    },
+    loading: {
+      handler(val) {
+        if (val) {
+          this.barChart.showLoading({
+            text: "Loading...",
+            color: "#5470C6",
+            textColor: "#000",
+            maskColor: "rgba(255, 255, 255, 0.8)",
+            zlevel: 0,
+          });
+          this.pieChart.showLoading({
+            text: "Loading...",
+            color: "#5470C6",
+            textColor: "#000",
+            maskColor: "rgba(255, 255, 255, 0.8)",
+            zlevel: 0,
+          });
+        } else {
+          this.barChart.hideLoading();
+          this.pieChart.hideLoading();
+        }
+      },
     },
   },
   data() {
@@ -71,6 +98,22 @@ export default {
     async initChart() {
       // Bar Chart
       if (this.chartData.length === 0) {
+        this.barChart = echarts.init(this.$refs.barChart, "macarons");
+        this.barChart.showLoading({
+          text: "Loading...",
+          color: "#5470C6",
+          textColor: "#000",
+          maskColor: "rgba(255, 255, 255, 0.8)",
+          zlevel: 0,
+        });
+        this.pieChart = echarts.init(this.$refs.pieChart, "macarons");
+        this.pieChart.showLoading({
+          text: "Loading...",
+          color: "#5470C6",
+          textColor: "#000",
+          maskColor: "rgba(255, 255, 255, 0.8)",
+          zlevel: 0,
+        });
         return;
       }
 

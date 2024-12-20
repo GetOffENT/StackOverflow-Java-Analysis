@@ -129,10 +129,8 @@ export default {
   components: {
     TimeLine,
   },
-  created() {
-    this.fetchData();
-  },
   mounted() {
+    this.fetchData();
     window.addEventListener("resize", this.debounceResize);
   },
   beforeDestroy() {
@@ -328,12 +326,26 @@ export default {
         ],
       });
     },
+    showLoading(chart) {
+      chart.showLoading({
+        text: "Loading...",
+        color: "#5470C6",
+        textColor: "#000",
+        maskColor: "rgba(255, 255, 255, 0.8)",
+        zlevel: 0,
+      });
+    } ,
     fetchData() {
       this.fetchAcceptedAnswers();
       this.fetchFirstAnswers();
       this.fetchAllAnswers();
     },
     async fetchAcceptedAnswers() {
+      if (!this.pieChart1) {
+        this.pieChart1 = echarts.init(this.$refs.pieChart1, "macarons");
+      }
+      this.showLoading(this.pieChart1);
+
       const params = {
         start: this.start,
         end: this.end,
@@ -341,8 +353,15 @@ export default {
 
       const res = await getAcceptedAnswersWithCreateDate(params);
       this.acceptedAnswerData = res.data;
+
+      this.pieChart1.hideLoading();
     },
     async fetchFirstAnswers() {
+      if (!this.pieChart2) {
+        this.pieChart2 = echarts.init(this.$refs.pieChart2, "macarons");
+      }
+      this.showLoading(this.pieChart2);
+
       const params = {
         start: this.start,
         end: this.end,
@@ -350,8 +369,15 @@ export default {
 
       const res = await getFirstAnswersWithCreateDate(params);
       this.firstAnswerData = res.data;
+
+      this.pieChart2.hideLoading();
     },
     async fetchAllAnswers() {
+      if (!this.scatterChart) {
+        this.scatterChart = echarts.init(this.$refs.scatterChart, "macarons");
+      }
+      this.showLoading(this.scatterChart);
+      
       const params = {
         start: this.start,
         end: this.end,
@@ -359,6 +385,8 @@ export default {
 
       const res = await getAnswersWithCreateDate(params);
       this.allAnswerData = res.data;
+
+      this.scatterChart.hideLoading();
     },
   },
 };

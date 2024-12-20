@@ -55,10 +55,8 @@ export default {
       deep: true,
     },
   },
-  created() {
-    this.fetchData();
-  },
   mounted() {
+    this.fetchData();
     window.addEventListener("resize", this.debounceResize);
   },
   beforeDestroy() {
@@ -79,6 +77,17 @@ export default {
       this.endDate = dateRange["end"];
     },
     async fetchData() {
+      if (!this.scatterChart) {
+        this.scatterChart = echarts.init(this.$refs.scatterChart, "macarons");
+      }
+      this.scatterChart.showLoading({
+        text: "Loading...",
+        color: "#5470C6",
+        textColor: "#000",
+        maskColor: "rgba(255, 255, 255, 0.8)",
+        zlevel: 0,
+      });
+
       const params = {
         start: this.start,
         end: this.end,
@@ -86,6 +95,8 @@ export default {
 
       const res = await getAnswersWithLength(params);
       this.answersWithLength = res.data;
+
+      this.scatterChart.hideLoading();
     },
     initScatterChart() {
       if (this.scatterChart) {
