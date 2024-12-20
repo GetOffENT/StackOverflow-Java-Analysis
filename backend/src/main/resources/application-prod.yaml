@@ -1,0 +1,7 @@
+stack-overflow:
+  database:
+    host: mysql
+    port: 3306
+    database: stackoverflow
+    username: root
+    password: 7NCx4_3gTuTj6nr
