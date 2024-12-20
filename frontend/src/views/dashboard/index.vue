@@ -51,22 +51,24 @@ export default {
   watch: {
     startDate(val) {
       this.start = val ? dayjs(val).format("YYYY-MM-DD HH:mm") : null;
-      this.fetchData();
+
+      this.processChartData();
     },
     endDate() {
       this.end = this.endDate
         ? dayjs(this.endDate).format("YYYY-MM-DD HH:mm")
         : null;
-      this.fetchData();
+
+      this.processChartData();
     },
     chartData: {
       deep: true,
       handler(val) {
-        this.processChartData(val);
+        this.processChartData();
       },
     },
     timeScale() {
-      this.processChartData(this.chartData);
+      this.processChartData();
     },
   },
   methods: {
@@ -84,7 +86,14 @@ export default {
       this.chartData = data;
     },
     // 处理图表数据：根据时间刻度（月或年）来聚合数据
-    processChartData(data) {
+    processChartData() {
+      let data = JSON.parse(JSON.stringify(this.chartData));
+      if (this.start && this.end) {
+        data = data.filter((item) => {
+          return item.time >= this.start && item.time <= this.end;
+        });
+      }
+
       if (this.timeScale === "monthly") {
         this.lineChartData = data.map((item) => ({
           time: item.time,
