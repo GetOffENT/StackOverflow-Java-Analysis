@@ -45,7 +45,7 @@ public class AnalysisController {
      * @return 对应标签数据
      */
     @GetMapping("/error-and-exception")
-    @Operation(summary = "根据标签名获取对应标签数据")
+    @Operation(summary = "根据bug名获取对应bug数据")
     public Result<Object> getBugByBugName(@RequestParam String bugName) {
         log.info("根据bug名获取对应bug数据 bugName:{}", bugName);
         return Result.success(analysisService.getBugByBugName(bugName));

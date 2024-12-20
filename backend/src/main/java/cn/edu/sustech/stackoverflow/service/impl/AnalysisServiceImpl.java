@@ -78,19 +78,13 @@ public class AnalysisServiceImpl implements AnalysisService {
     @Override
     public Object getBugByBugName(String bugName) {
         // 查询所有的 Question
-        List<Question> questions = questionMapper.selectList(
-                new LambdaQueryWrapper<Question>()
-        );
+        List<Question> questions = questionMapper.selectList(null);
 
         // 查询所有的 Answer
-        List<Answer> answers = answerMapper.selectList(
-                new LambdaQueryWrapper<Answer>()
-        );
+        List<Answer> answers = answerMapper.selectList(null);
 
         // 查询所有的 Comment
-        List<Comment> comments = commentMapper.selectList(
-                new LambdaQueryWrapper<Comment>()
-        );
+        List<Comment> comments = commentMapper.selectList(null);
 
         // 定义统计结果的 Map
         Map<String, Long> errorCountMap = new HashMap<>();
@@ -552,6 +546,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                         .downVoteCount(answer.getDownVoteCount())
                         .isAccepted(answer.getIsAccepted())
                         .reputation(userMap.get(answer.getOwnerUserId()).getReputation())
+                        .answerCreateDate(answer.getCreationDate())
                         .build())
                 .toList();
     }
@@ -579,6 +574,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                         .downVoteCount(answer.getDownVoteCount())
                         .isAccepted(answer.getIsAccepted())
                         .length(answer.getBody().length())
+                        .answerCreateDate(answer.getCreationDate())
                         .build())
                 .toList();
     }

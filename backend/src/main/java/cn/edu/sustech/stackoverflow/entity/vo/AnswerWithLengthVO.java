@@ -1,10 +1,13 @@
 package cn.edu.sustech.stackoverflow.entity.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -34,4 +37,8 @@ public class AnswerWithLengthVO {
 
     @Schema(description = "回答长度")
     private Integer length;
+
+    @Schema(description = "回答创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+    private LocalDateTime answerCreateDate;
 }
