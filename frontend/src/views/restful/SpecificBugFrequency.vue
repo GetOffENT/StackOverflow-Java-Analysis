@@ -5,7 +5,12 @@
     <!-- 输入框用于输入 bug 名称 -->
     <div class="input-group">
       <label for="tagName">Bug Name:</label>
-      <input v-model="bugName" type="text" placeholder="Enter bug name" class="input-field">
+      <input
+        v-model="bugName"
+        type="text"
+        placeholder="Enter bug name"
+        class="input-field"
+      />
     </div>
 
     <!-- 按钮 -->
@@ -26,44 +31,46 @@
 </template>
 
 <script>
-import axios from 'axios'
+import request from "@/utils/request";
 
 export default {
   data() {
     return {
-      topicQuery: '',
+      topicQuery: "",
       topicResult: null,
-      bugName: null
-    }
+      bugName: null,
+      BASE_URL: "",
+    };
   },
   computed: {
     // 计算属性，动态生成 URL
     bugUrl() {
       const params = [];
       if (this.bugName) params.push(`bugName=${this.bugName}`);
-      return `http://localhost:8080/analysis/error-and-exception${params ? `?${params.join('&')}` : ''}`;
-    }
+      return `${this.BASE_URL}/analysis/error-and-exception${
+        params.length > 0 ? `?${params.join("&")}` : ""
+      }`;
+    },
+  },
+  created() {
+    this.BASE_URL = process.env.VUE_APP_BASE_API;
   },
   methods: {
     async getSpecificBug() {
       if (!this.bugName) {
-        this.$message.error('Please enter a bug name')
-        return
+        this.$message.error("Please enter a bug name");
+        return;
       }
       try {
         // 使用用户输入的 bugName
-        const response = await axios.get(`http://localhost:8080/analysis/error-and-exception`, {
-          params: {
-            bugName: this.bugName
-          }
-        })
-        this.topicResult = response.data
+        const response = await request.get(this.bugUrl);
+        this.topicResult = response.data;
       } catch (error) {
-        console.error('Error fetching specific bug data:', error)
+        console.error("Error fetching specific bug data:", error);
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style>

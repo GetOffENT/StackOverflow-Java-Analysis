@@ -25,14 +25,15 @@
 </template>
 
 <script>
-import axios from 'axios'
+import request from "@/utils/request";
 
 export default {
   data() {
     return {
       topicQuery: '',
       topicResult: null,
-      tagName: null
+      tagName: null,
+      BASE_URL: "",
     }
   },
   computed: {
@@ -40,8 +41,11 @@ export default {
     topicUrl() {
       const params = [];
       if (this.tagName) params.push(`tagName=${this.tagName}`);
-      return `http://localhost:8080/analysis/topic${params.length ? `?${params.join('&')}` : ''}`;
+      return `${this.BASE_URL}/analysis/topic${params.length ? `?${params.join('&')}` : ''}`;
     }
+  },
+  created() {
+    this.BASE_URL = process.env.VUE_APP_BASE_API;
   },
   methods: {
     async getSpecificTopic() {
@@ -51,11 +55,7 @@ export default {
       }
       try {
         // 使用用户输入的 tagName
-        const response = await axios.get(`http://localhost:8080/analysis/topic`, {
-          params: {
-            tagName: this.tagName
-          }
-        })
+        const response = await request.get(this.topicUrl)
         this.topicResult = response.data
       } catch (error) {
         console.error('Error fetching specific topic:', error)
