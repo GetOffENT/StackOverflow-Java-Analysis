@@ -90,7 +90,7 @@ export default {
         },
         grid: {
           left: 10,
-          right: 10,
+          right: 20,
           bottom: 20,
           top: 30,
           containLabel: true,
@@ -109,9 +109,6 @@ export default {
         },
         legend: {
           data: ["Question Count", "Answer Count", "Comment Count"],
-        },
-        grid: {
-          right: 20,
         },
         series: [
           {

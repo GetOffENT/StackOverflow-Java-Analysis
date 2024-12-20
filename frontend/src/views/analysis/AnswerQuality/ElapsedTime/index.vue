@@ -35,8 +35,68 @@
       <h3 style="justify-self: center; color: #606266">
         Scatter Plot of Answer Data: Upvotes vs Duration
       </h3>
-      <div ref="scatterChart" class="scatter-chart" style="height: 800px"></div>
+      <div style="justify-self: right; margin-right: 150px">
+        <span
+          class="define-span"
+          @click="dialogVisible = true"
+          v-if="buttonText === 'details'"
+          >Define "High-quality"</span
+        >
+        <el-button @click="switchChart">{{ this.buttonText }}</el-button>
+      </div>
+      <div ref="bottomChart" class="scatter-chart" style="height: 800px"></div>
     </div>
+
+    <el-dialog
+      title="Define a high-quality answer"
+      :visible.sync="dialogVisible"
+      width="500px"
+    >
+      <el-form :model="filter" label-width="140px">
+        <!-- upVoteCount -->
+        <el-form-item label="UpVote Count >">
+          <el-input-number
+            v-model="filter.upVoteCount"
+            :min="0"
+            placeholder="Enter minimum count"
+          />
+        </el-form-item>
+
+        <!-- downVoteCount -->
+        <el-form-item label="DownVote Count <">
+          <el-input-number
+            v-model="filter.downVoteCount"
+            :min="0"
+            placeholder="Enter maximum count"
+          />
+        </el-form-item>
+
+        <!-- Condition (or/and) -->
+        <el-form-item>
+          <el-row :gutter="20">
+            <el-col :span="8">
+              <el-select
+                v-model="filter.orAccepted"
+                placeholder="Select Condition"
+                :disabled="!filter.isAccepted"
+              >
+                <el-option :value="true" label="or"></el-option>
+                <el-option :value="false" label="and"></el-option>
+              </el-select>
+            </el-col>
+            <el-col :span="12">
+              <el-checkbox v-model="filter.isAccepted">Accepted</el-checkbox>
+            </el-col>
+          </el-row>
+        </el-form-item>
+      </el-form>
+
+      <!-- Dialog Footer -->
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">Cancel</el-button>
+        <el-button type="primary" @click="handleDialogClose">Confirm</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -67,14 +127,23 @@ export default {
       pieFirstAnswerData: [],
       allAnswerData: [],
       displayedAllAnswerData: [],
+      displayedLineData: [],
       height: "300px",
       pieChart1: null,
       pieChart2: null,
-      scatterChart: null,
+      bottomChart: null,
       resizeTimeout: null,
       loadingAcceptedAnswer: false,
       loadingFirstAnswer: false,
       loadingAllAnswer: false,
+      filter: {
+        upVoteCount: 5,
+        downVoteCount: 100000,
+        orAccepted: false,
+        isAccepted: true,
+      },
+      buttonText: "details",
+      dialogVisible: false,
     };
   },
   watch: {
@@ -132,7 +201,13 @@ export default {
     },
     displayedAllAnswerData: {
       handler() {
-        this.initScatterChart();
+        // this.initScatterChart();
+        this.filterLineData();
+        if (this.buttonText === "details") {
+          this.initLineChart();
+        } else {
+          this.initScatterChart();
+        }
       },
       deep: true,
     },
@@ -157,10 +232,108 @@ export default {
     window.removeEventListener("resize", this.debounceResize);
   },
   methods: {
+    handleDialogClose() {
+      this.dialogVisible = false;
+      this.filterLineData();
+      this.initLineChart();
+    },
+    switchChart() {
+      if (this.buttonText === "details") {
+        this.buttonText = "back";
+        this.initScatterChart();
+      } else {
+        this.buttonText = "details";
+        this.initLineChart();
+      }
+    },
+    filterLineData() {
+      // 把displayedAllAnswerData按照bins(duration方向)分组, count计数, xAxis为从bins[1]开始到bins[length-1]
+      const bins = [
+        "0m",
+        "10m",
+        "1h",
+        "5h",
+        "1d",
+        "10d",
+        "100d",
+        "1y",
+        "2y",
+        "5y",
+        "10000d",
+      ];
+      const binsByMs = bins.map(
+        // 转化为ms
+        (item) => {
+          if (item.endsWith("m")) {
+            return parseInt(item) * 60 * 1000;
+          } else if (item.endsWith("h")) {
+            return parseInt(item) * 60 * 60 * 1000;
+          } else if (item.endsWith("d")) {
+            return parseInt(item) * 24 * 60 * 60 * 1000;
+          } else if (item.endsWith("y")) {
+            return parseInt(item) * 365 * 24 * 60 * 60 * 1000;
+          }
+        }
+      );
+      this.lineData = binsByMs
+        .map((bin, index) => {
+          if (index !== 0) {
+            let highQualityCount = 0,
+              nonHighQualityCount = 0;
+            for (let i = 0; i < this.displayedAllAnswerData.length; i++) {
+              const item = this.displayedAllAnswerData[i];
+              if (item.duration > binsByMs[index - 1] && item.duration <= bin) {
+                let highQualityFlag = false;
+                if (this.filter.orAccepted && this.filter.isAccepted) {
+                  if (item.isAccepted) {
+                    highQualityFlag = true;
+                  } else {
+                    highQualityFlag =
+                      this.filter.upVoteCount <= item.upVoteCount &&
+                      item.downVoteCount <= this.filter.downVoteCount;
+                  }
+                } else {
+                  highQualityFlag =
+                    this.filter.upVoteCount <= item.upVoteCount &&
+                    item.downVoteCount <= this.filter.downVoteCount &&
+                    (this.filter.isAccepted ? item.isAccepted : true);
+                }
+                if (highQualityFlag) {
+                  highQualityCount += 1;
+                } else {
+                  nonHighQualityCount += 1;
+                }
+              }
+            }
+            // 带单位的区间(如0-10m, 10m-1h)，单位相同则只有后一个显示单位
+            if (index === bins.length - 1) {
+              return {
+                xAxis: `${bins[index - 1]}+`,
+                highQualityCount,
+                nonHighQualityCount,
+              };
+            }
+            const xAxis =
+              bins[index - 1].slice(-1) === bins[index].slice(-1)
+                ? `${bins[index - 1].slice(0, -1)}-${bins[index]}`
+                : `${bins[index - 1]}-${bins[index]}`;
+            return {
+              xAxis,
+              highQualityCount,
+              nonHighQualityCount,
+            };
+          }
+        })
+        .slice(1);
+    },
     handleResize() {
       this.initPieChart1();
       this.initPieChart2();
-      this.initScatterChart();
+      if (this.buttonText === "back") {
+        this.initScatterChart();
+      } else {
+        this.initLineChart();
+      }
     },
     debounceResize() {
       clearTimeout(this.resizeTimeout);
@@ -242,15 +415,85 @@ export default {
         ],
       });
     },
-    initScatterChart() {
-      if (this.scatterChart) {
-        this.scatterChart.dispose();
+    initLineChart() {
+      if (this.bottomChart) {
+        this.bottomChart.dispose();
       }
-      this.scatterChart = echarts.init(this.$refs.scatterChart, "macarons");
+      this.bottomChart = echarts.init(this.$refs.bottomChart, "macarons");
+
+      this.bottomChart.setOption({
+        xAxis: {
+          name: "Duration",
+          type: "category",
+          boundaryGap: false,
+          data: this.lineData.map((item) => item.xAxis),
+          axisTick: {
+            show: false,
+          },
+        },
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
+          },
+          padding: [5, 10],
+        },
+        yAxis: {
+          name: "Answer Count",
+          axisTick: {
+            show: false,
+          },
+        },
+        legend: {
+          data: ["High-quality", "Non-high-quality"],
+        },
+        series: [
+          {
+            name: "High-quality",
+            type: "line",
+            data: this.lineData.map((item) => item.highQualityCount),
+            itemStyle: {
+              normal: {
+                color: "#FF005A",
+                lineStyle: {
+                  color: "#FF005A",
+                  width: 2,
+                },
+              },
+            },
+            smooth: true,
+            animationDuration: 2800,
+            animationEasing: "cubicInOut",
+          },
+          {
+            name: "Non-high-quality",
+            type: "line",
+            data: this.lineData.map((item) => item.nonHighQualityCount),
+            itemStyle: {
+              normal: {
+                color: "#3888fa",
+                lineStyle: {
+                  color: "#3888fa",
+                  width: 2,
+                },
+              },
+            },
+            smooth: true,
+            animationDuration: 2800,
+            animationEasing: "cubicInOut",
+          },
+        ],
+      });
+    },
+    initScatterChart() {
+      if (this.bottomChart) {
+        this.bottomChart.dispose();
+      }
+      this.bottomChart = echarts.init(this.$refs.bottomChart, "macarons");
 
       const toDays = (ms) => Math.ceil(ms / (1000 * 60 * 60 * 24));
 
-      this.scatterChart.setOption({
+      this.bottomChart.setOption({
         tooltip: {
           trigger: "item",
           formatter: function (params) {
@@ -298,50 +541,190 @@ export default {
           {
             name: "Accepted & First",
             type: "scatter",
-            data: this.displayedAllAnswerData
-              .filter((item) => item.isAccepted && item.first)
-              .map((item) => ({
-                value: [toDays(item.duration), item.upVoteCount],
-                itemStyle: { color: "#2ec7c9" },
-                symbolSize: 7,
-                ...item,
-              })),
+            data: (() => {
+              // 过滤出 isAccepted 且 first 的数据
+              const filteredData = this.displayedAllAnswerData.filter(
+                (item) => item.isAccepted && item.first
+              );
+
+              // 计算过滤后数据的总和和平均值
+              const total = filteredData.reduce(
+                (acc, item) => {
+                  acc.duration += item.duration / 10000;
+                  acc.upVoteCount += item.upVoteCount;
+                  return acc;
+                },
+                { duration: 0, upVoteCount: 0 }
+              );
+
+              const averageDuration =
+                (total.duration / filteredData.length) * 10000;
+              const averageUpVoteCount =
+                total.upVoteCount / filteredData.length;
+
+              return [
+                // 映射过滤后的数据
+                ...filteredData.map((item) => ({
+                  value: [toDays(item.duration), item.upVoteCount],
+                  itemStyle: { color: "#2ec7c9" },
+                  symbolSize: 7,
+                  ...item,
+                })),
+                // 添加平均值数据点
+                {
+                  value: [toDays(averageDuration), averageUpVoteCount],
+                  itemStyle: { color: "#2ec7c9" },
+                  symbolSize: 50,
+                  name: "Average",
+                  duration: averageDuration, // 平均 duration 原始值
+                  upVoteCount: averageUpVoteCount,
+                  downVoteCount: null,
+                  isAccepted: null,
+                  first: null,
+                },
+              ];
+            })(),
           },
           {
             name: "Accepted & Not First",
             type: "scatter",
-            data: this.displayedAllAnswerData
-              .filter((item) => item.isAccepted && !item.first)
-              .map((item) => ({
-                value: [toDays(item.duration), item.upVoteCount],
-                itemStyle: { color: "#b6a2de" },
-                symbolSize: 7,
-                ...item,
-              })),
+            data: (() => {
+              // 过滤出 isAccepted 且非 first 的数据
+              const filteredData = this.displayedAllAnswerData.filter(
+                (item) => item.isAccepted && !item.first
+              );
+
+              // 计算过滤后数据的总和和平均值
+              const total = filteredData.reduce(
+                (acc, item) => {
+                  acc.duration += item.duration / 10000;
+                  acc.upVoteCount += item.upVoteCount;
+                  return acc;
+                },
+                { duration: 0, upVoteCount: 0 }
+              );
+
+              const averageDuration =
+                (total.duration / filteredData.length) * 10000;
+              const averageUpVoteCount =
+                total.upVoteCount / filteredData.length;
+
+              return [
+                // 映射过滤后的数据
+                ...filteredData.map((item) => ({
+                  value: [toDays(item.duration), item.upVoteCount],
+                  itemStyle: { color: "#b6a2de" },
+                  symbolSize: 7,
+                  ...item,
+                })),
+                // 添加平均值数据点
+                {
+                  value: [toDays(averageDuration), averageUpVoteCount],
+                  itemStyle: { color: "#b6a2de" },
+                  symbolSize: 50,
+                  name: "Average",
+                  duration: averageDuration, // 平均 duration 原始值
+                  upVoteCount: averageUpVoteCount,
+                  downVoteCount: null,
+                  isAccepted: null,
+                  first: null,
+                },
+              ];
+            })(),
           },
           {
             name: "First & Not Accepted",
             type: "scatter",
-            data: this.displayedAllAnswerData
-              .filter((item) => !item.isAccepted && item.first)
-              .map((item) => ({
-                value: [toDays(item.duration), item.upVoteCount],
-                itemStyle: { color: "#5ab1ef" },
-                symbolSize: 7,
-                ...item,
-              })),
+            data: (() => {
+              // 过滤出 first 且非 isAccepted 的数据
+              const filteredData = this.displayedAllAnswerData.filter(
+                (item) => item.first && !item.isAccepted
+              );
+
+              // 计算过滤后数据的总和和平均值
+              const total = filteredData.reduce(
+                (acc, item) => {
+                  acc.duration += item.duration / 10000;
+                  acc.upVoteCount += item.upVoteCount;
+                  return acc;
+                },
+                { duration: 0, upVoteCount: 0 }
+              );
+
+              const averageDuration =
+                (total.duration / filteredData.length) * 10000;
+              const averageUpVoteCount =
+                total.upVoteCount / filteredData.length;
+
+              return [
+                // 映射过滤后的数据
+                ...filteredData.map((item) => ({
+                  value: [toDays(item.duration), item.upVoteCount],
+                  itemStyle: { color: "#5ab1ef" },
+                  symbolSize: 7,
+                  ...item,
+                })),
+                // 添加平均值数据点
+                {
+                  value: [toDays(averageDuration), averageUpVoteCount],
+                  itemStyle: { color: "#5ab1ef" },
+                  symbolSize: 50,
+                  name: "Average",
+                  duration: averageDuration, // 平均 duration 原始值
+                  upVoteCount: averageUpVoteCount,
+                  downVoteCount: null,
+                  isAccepted: null,
+                  first: null,
+                },
+              ];
+            })(),
           },
           {
             name: "Not Accepted & Not First",
             type: "scatter",
-            data: this.displayedAllAnswerData
-              .filter((item) => !item.isAccepted && !item.first)
-              .map((item) => ({
-                value: [toDays(item.duration), item.upVoteCount],
-                itemStyle: { color: "#ffb980" },
-                symbolSize: 7,
-                ...item,
-              })),
+            data: (() => {
+              // 过滤出非 isAccepted 且非 first 的数据
+              const filteredData = this.displayedAllAnswerData.filter(
+                (item) => !item.isAccepted && !item.first
+              );
+
+              // 计算过滤后数据的总和和平均值
+              const total = filteredData.reduce(
+                (acc, item) => {
+                  acc.duration += item.duration / 10000;
+                  acc.upVoteCount += item.upVoteCount;
+                  return acc;
+                },
+                { duration: 0, upVoteCount: 0 }
+              );
+
+              const averageDuration =
+                (total.duration / filteredData.length) * 10000;
+              const averageUpVoteCount =
+                total.upVoteCount / filteredData.length;
+
+              return [
+                // 映射过滤后的数据
+                ...filteredData.map((item) => ({
+                  value: [toDays(item.duration), item.upVoteCount],
+                  itemStyle: { color: "#ffb980" },
+                  symbolSize: 7,
+                  ...item,
+                })),
+                // 添加平均值数据点
+                {
+                  value: [toDays(averageDuration), averageUpVoteCount],
+                  itemStyle: { color: "#ffb980" },
+                  symbolSize: 50,
+                  name: "Average",
+                  duration: averageDuration, // 平均 duration 原始值
+                  upVoteCount: averageUpVoteCount,
+                  downVoteCount: null,
+                  isAccepted: null,
+                  first: null,
+                },
+              ];
+            })(),
           },
         ],
       });
@@ -423,10 +806,10 @@ export default {
       this.pieChart2.hideLoading();
     },
     async fetchAllAnswers() {
-      if (!this.scatterChart) {
-        this.scatterChart = echarts.init(this.$refs.scatterChart, "macarons");
+      if (!this.bottomChart) {
+        this.bottomChart = echarts.init(this.$refs.bottomChart, "macarons");
       }
-      this.showLoading(this.scatterChart);
+      this.showLoading(this.bottomChart);
       this.loadingAllAnswer = true;
 
       if (!this.allAnswerData.length) {
@@ -451,7 +834,7 @@ export default {
       }
 
       this.loadingAllAnswer = false;
-      this.scatterChart.hideLoading();
+      this.bottomChart.hideLoading();
     },
   },
 };
@@ -471,5 +854,17 @@ export default {
 }
 .pie-chart {
   width: 100%;
+}
+
+.define-span {
+  margin-right: 30px;
+  color: #3498db;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.define-span:hover {
+  color: #1d4e89;
+  text-decoration: underline;
 }
 </style>
