@@ -1,5 +1,5 @@
 <template>
-  <div style="margin-top: 20px">
+  <div style="margin-top: 20px; overflow: auto">
     <h1 style="justify-self: center; margin-bottom: 30px">
       Top N most frequently asked topics
     </h1>
@@ -18,12 +18,7 @@
       </el-form-item>
       <!-- 显示数量输入框 -->
       <el-form-item label="top N">
-        <el-input-number
-          v-model="topN"
-          :min="2"
-          :max="100"
-          @change="adjustChartHeight"
-        />
+        <el-input-number v-model="topN" :min="2" :max="2000" @change="search" />
       </el-form-item>
 
       <!-- 查询按钮 -->
@@ -31,7 +26,12 @@
         <el-button type="primary" @click="search">query</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="startRaceChart">play</el-button>
+        <el-button
+          type="primary"
+          @click="startRaceChart"
+          v-if="currentClick === 'static' || currentClick === 'dynamic'"
+          >play</el-button
+        >
       </el-form-item>
     </el-form>
 
@@ -49,7 +49,12 @@
     </div>
 
     <!-- 图表区域 -->
-    <div id="chart" style="justify-self: center"></div>
+    <div v-if="currentClick === 'cloud'">
+      <div id="cloudChart"></div>
+    </div>
+    <div v-else>
+      <div id="chart" style="justify-self: center"></div>
+    </div>
   </div>
 </template>
 
@@ -57,8 +62,9 @@
 import { getTopNTopics, getRaceChartData } from "@/api/tag";
 import dayjs from "dayjs";
 import * as d3 from "d3";
-import d3Tip from "d3-tip";
-import cloud from "d3-cloud";
+import * as echarts from "echarts";
+import "echarts-wordcloud";
+require("echarts/theme/macarons");
 
 export default {
   name: "RaceChart",
@@ -73,10 +79,51 @@ export default {
       chartWidth: 1200,
       barHeight: 50,
       margin: { top: 50, right: 150, bottom: 50, left: 150 },
+      colors: [
+        "#86D4FF",
+        "#FF8F6C",
+        "#2CF263",
+        "#9FA8F7",
+        "#1274FF",
+        "#E6613D",
+        "#FFC629",
+        "#FFAB2E",
+        "#F78289",
+        "#FF6C96",
+        "#45BFD4",
+        "#4E31FF",
+        "#31FBFB",
+        "#86D4FF",
+        "#BF8AFD",
+        "#FFF500",
+        "#DE58FF",
+        "#72ED7C",
+        "#0BEEB8",
+        "#931CFF",
+        "#3D25F2",
+        "#F995C8",
+        "#FBE9B4",
+        "#FF4AB6",
+      ],
     };
   },
   async mounted() {
     this.cloudChart();
+  },
+  watch: {
+    currentClick(newVal, oldVal) {
+      // 销毁旧图表实例
+      if (oldVal === "cloud") {
+        const cloudChart = echarts.getInstanceByDom(
+          document.getElementById("cloudChart")
+        );
+        if (cloudChart) {
+          cloudChart.dispose(); // 销毁旧实例
+        }
+      } else if (oldVal === "static" || oldVal === "dynamic") {
+        d3.select("#chart").selectAll("*").remove(); // 清空 D3 图表
+      }
+    },
   },
   methods: {
     async search() {
@@ -90,73 +137,88 @@ export default {
     },
     async cloudChart() {
       this.currentClick = "cloud";
-      d3.select("#chart").selectAll("*").remove();
 
-      await this.fetchStaticData();
-
-      const chartWidth = this.chartWidth + this.margin.left + this.margin.right;
-      const chartHeight =
-        this.topN * this.barHeight + this.margin.top + this.margin.bottom;
-
-      const svg = d3
-        .select("#chart")
-        .append("svg")
-        .attr("width", chartWidth)
-        .attr("height", chartHeight)
-        .append("g")
-        .attr("transform", `translate(${chartWidth / 2}, ${chartHeight / 2})`);
-
-      const layout = cloud()
-        .size([chartWidth, chartHeight])
-        .words(
-          this.staticData.map((d) => ({
-            text: d.tagName,
-            size: Math.sqrt(d.count) * 10,
-            percentage: (d.percentage * 100).toFixed(2) + "%",
-          }))
-        )
-        .padding(5) // 词语之间的间距
-        .rotate((d) => {
-          const rotationProbability = Math.max(0.2, 1 - d.size / 100);
-
-          // 决定是否旋转
-          if (Math.random() < rotationProbability) {
-            return Math.random() * 180 - 90;
-          } else {
-            return 0;
-          }
-        }) // 随机旋转
-        .font("Impact")
-        .fontSize((d) => d.size)
-        .on("end", draw); // 布局完成后调用绘制函数
-
-      layout.start();
-
-      // 绘制词云
-      function draw(words) {
-        svg
-          .selectAll("text")
-          .data(words)
-          .enter()
-          .append("text")
-          .style("font-family", "Impact")
-          .style(
-            "fill",
-            () => d3.schemeCategory10[Math.floor(Math.random() * 10)]
-          ) // 随机颜色
-          .style("font-size", (d) => `${d.size}px`)
-          .attr("text-anchor", "middle")
-          .attr(
-            "transform",
-            (d) => `translate(${d.x}, ${d.y}) rotate(${d.rotate})`
-          )
-          .text((d) => d.text)
-          .append("title")
-          .text(
-            (d) => `${d.text}\ncount: ${d.size}\npercentage: ${d.percentage}`
-          );
+      // 等待元素加载完成
+      while (!document.getElementById("cloudChart")) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
+      const cloudChartContainer = document.getElementById("cloudChart");
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+
+      const containerWidth = screenWidth;
+      const containerHeight = screenHeight * 0.6;
+
+      cloudChartContainer.style.width = `${containerWidth}px`;
+      cloudChartContainer.style.height = `${containerHeight}px`;
+      cloudChartContainer.style.margin = "20px auto";
+      cloudChartContainer.style.maxWidth = "100%";
+
+      // 获取静态数据
+      await this.fetchStaticData();
+      const wordCloudData = this.staticData.map((item) => ({
+        name: item.tagName,
+        value: item.count,
+        percentage: (item.percentage * 100).toFixed(2),
+      }));
+
+      const chart = echarts.init(cloudChartContainer, "macarons");
+      chart.setOption({
+        tooltip: {
+          show: true,
+          trigger: "item",
+          formatter: function (params) {
+            const { name, value, data } = params;
+            return `
+          <div>
+            <strong>${name}</strong><br/>
+            Count: ${value}<br/>
+            Percentage: ${data.percentage}%<br/>
+          </div>
+        `;
+          },
+        },
+        series: [
+          {
+            type: "wordCloud",
+            shape: "circle",
+            sizeRange: [20, 100],
+            rotationRange: [-45, 45],
+            gridSize: 8,
+            textStyle: {
+              fontFamily: "sans-serif",
+              fontWeight: "bold",
+              normal: {
+                color: () => {
+                  return this.colors[
+                    Math.floor(Math.random() * this.colors.length)
+                  ];
+                },
+              },
+            },
+            emphasis: {
+              focus: "self",
+              textStyle: {
+                textShadowBlur: 10,
+                textShadowColor: "#333",
+              },
+            },
+            data: wordCloudData,
+          },
+        ],
+      });
+      let timer = null;
+      // 设备视口大小改变时，重置 echarts
+      window.onresize = function () {
+        // 简单的防抖动处理
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          console.log(timer);
+          chart.resize();
+        }, 500);
+      };
     },
+
     async fetchStaticData() {
       const start = this.startDate
         ? dayjs(this.startDate).format("YYYY-MM-DD HH:mm")
@@ -178,13 +240,6 @@ export default {
 
       const res = await getRaceChartData({ start, end, n: this.topN });
       this.raceData = res.data;
-    },
-    adjustChartHeight() {
-      const chartHeight =
-        this.topN * this.barHeight + this.margin.top + this.margin.bottom;
-      d3.select("#chart").select("svg").attr("height", chartHeight);
-
-      this.search();
     },
     async staticChart() {
       this.currentClick = "static";
@@ -426,7 +481,6 @@ export default {
 .chart-type-select {
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
 }
 .ciyun:hover {
   cursor: pointer;
@@ -437,5 +491,10 @@ export default {
 }
 .horizontal-bar-chart:hover {
   cursor: pointer;
+}
+
+#chart {
+  min-height: 300px;
+  max-width: 100%;
 }
 </style>
