@@ -3,7 +3,7 @@
     <h1 style="justify-self: center; margin-bottom: 30px">
       Answer Quality and Its Relation to the elapsed time between question and answer creation
     </h1>
-    <TimeLine :width="'70vw'" @update:range="handleTimeRangeUpdate" />
+    <TimeLine :width="'70vw'" @update:range="handleTimeRangeUpdate" :disabled="disabled"/>
     <div class="pie-chart-container">
       <div class="pie-chart-left-contaniner">
         <h3 style="justify-self: center; color: #606266">
@@ -64,6 +64,9 @@ export default {
       pieChart2: null,
       scatterChart: null,
       resizeTimeout: null,
+      loadingAcceptedAnswer: false,
+      loadingFirstAnswer: false,
+      loadingAllAnswer: false,
     };
   },
   watch: {
@@ -128,6 +131,11 @@ export default {
   },
   components: {
     TimeLine,
+  },
+  computed: {
+    disabled() {
+      return this.loadingAcceptedAnswer || this.loadingFirstAnswer || this.loadingAllAnswer;
+    },
   },
   mounted() {
     this.fetchData();
@@ -345,6 +353,7 @@ export default {
         this.pieChart1 = echarts.init(this.$refs.pieChart1, "macarons");
       }
       this.showLoading(this.pieChart1);
+      this.loadingAcceptedAnswer = true;
 
       const params = {
         start: this.start,
@@ -354,6 +363,7 @@ export default {
       const res = await getAcceptedAnswersWithCreateDate(params);
       this.acceptedAnswerData = res.data;
 
+      this.loadingAcceptedAnswer = false;
       this.pieChart1.hideLoading();
     },
     async fetchFirstAnswers() {
@@ -361,6 +371,7 @@ export default {
         this.pieChart2 = echarts.init(this.$refs.pieChart2, "macarons");
       }
       this.showLoading(this.pieChart2);
+      this.loadingFirstAnswer = true;
 
       const params = {
         start: this.start,
@@ -370,6 +381,7 @@ export default {
       const res = await getFirstAnswersWithCreateDate(params);
       this.firstAnswerData = res.data;
 
+      this.loadingFirstAnswer = false;
       this.pieChart2.hideLoading();
     },
     async fetchAllAnswers() {
@@ -377,6 +389,7 @@ export default {
         this.scatterChart = echarts.init(this.$refs.scatterChart, "macarons");
       }
       this.showLoading(this.scatterChart);
+      this.loadingAllAnswer = true;
       
       const params = {
         start: this.start,
@@ -386,6 +399,7 @@ export default {
       const res = await getAnswersWithCreateDate(params);
       this.allAnswerData = res.data;
 
+      this.loadingAllAnswer = false;
       this.scatterChart.hideLoading();
     },
   },

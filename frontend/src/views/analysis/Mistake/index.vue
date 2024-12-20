@@ -13,7 +13,7 @@
         />
       </el-form-item>
     </el-form>
-    <TimeLine :width="'70vw'" @update:range="handleTimeRangeUpdate" />
+    <TimeLine :width="'70vw'" @update:range="handleTimeRangeUpdate" :disabled="disabled"/>
     <div class="chart-container">
       <div class="top-container">
         <div class="top-left-contaniner">
@@ -21,7 +21,7 @@
             :chartData="exceptionData"
             :type="'exceptions'"
             :title="'Exceptions'"
-            :loading="loading"
+            :loading="loadingSeperate"
           />
         </div>
         <div class="top-right-contaniner">
@@ -29,7 +29,7 @@
             :chartData="errorData"
             :type="'errors'"
             :title="'Errors'"
-            :loading="loading"
+            :loading="loadingSeperate"
           />
         </div>
       </div>
@@ -38,7 +38,7 @@
           :chartData="mixedData"
           :type="'errors and exceptions'"
           :title="'Exceptions and Errors together'"
-          :loading="loading"
+          :loading="loadingMixed"
         />
       </div>
     </div>
@@ -66,23 +66,37 @@ export default {
       topN: 10,
       startDate: null,
       endDate: null,
-      loading: false,
+      loadingSeperate: false,
+      loadingMixed: false,
     };
   },
+  computed: {
+    disabled: function () {
+      return this.loadingSeperate || this.loadingMixed;
+    },
+  },
   methods: {
+    fetchData() {
+      this.loadingSeperate = true;
+      this.loadingMixed = true;
+      this.initData().then(() => {
+        this.loadingSeperate = false;
+      });
+      this.initMixedData().then(() => {
+        this.loadingMixed = false;
+      });
+    },
     debounceCountChange() {
       clearTimeout(this.countTimeout);
       this.countTimeout = setTimeout(() => {
-        this.initData();
-        this.initMixedData();
+        this.fetchData();
       }, 200);
     },
     handleTimeRangeUpdate(dateRange) {
       this.startDate = dateRange["start"];
       this.endDate = dateRange["end"];
 
-      this.initData();
-      this.initMixedData();
+      this.fetchData();
     },
     async initData() {
       const start = this.startDate
@@ -121,8 +135,7 @@ export default {
     },
   },
   created() {
-    this.initData();
-    this.initMixedData();
+    this.fetchData();
   },
 };
 </script>

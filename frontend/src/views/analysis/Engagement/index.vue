@@ -34,12 +34,13 @@
           :tooltip="'none'"
           :lazy="true"
           @change="handleWeightChange"
+          :disabled="disabled"
         />
       </el-form-item>
     </el-form>
 
     <div ref="chart" class="chart"></div>
-    <TimeLine :width="'70vw'" @update:range="handleTimeRangeUpdate" />
+    <TimeLine :width="'70vw'" @update:range="handleTimeRangeUpdate" :disabled="disabled"/>
   </div>
 </template>
 
@@ -74,6 +75,7 @@ export default {
       resizeTimeout: null,
       countTimeout: null,
       percentageTimeout: null,
+      disabled: false,
     };
   },
   components: {
@@ -141,11 +143,13 @@ export default {
         maskColor: "rgba(255, 255, 255, 0.8)",
         zlevel: 0,
       });
+      this.disabled = true;
 
       if (!resize) {
         await this.fetchChartData();
       }
 
+      this.disabled = false;
       this.barChart.hideLoading();
 
       const chartWidth = this.chartData.length * 150;

@@ -14,6 +14,7 @@
       :tooltip-formatter="formatTime2"
       @change="handleRangeChange"
       class="time-slider"
+      :disabled="disabled"
     ></vue-slider>
 
     <!-- 时间范围显示 -->
@@ -41,6 +42,10 @@ export default {
     step: {
       type: Number,
       default: 3600 * 24 * 1000, // 步长（默认为1小时）
+    },
+    disabled: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {

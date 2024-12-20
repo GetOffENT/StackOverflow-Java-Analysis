@@ -3,7 +3,7 @@
     <h1 style="justify-self: center; margin-bottom: 30px">
       Answer Quality and Its Relation to Answer Length
     </h1>
-    <TimeLine :width="'70vw'" @update:range="handleTimeRangeUpdate" />
+    <TimeLine :width="'70vw'" @update:range="handleTimeRangeUpdate" :disabled="disabled" />
     <div class="scatter-chart">
       <h3 style="justify-self: center; color: #606266">
         Scatter Plot of Answer Data: Upvotes vs Answer Length
@@ -31,6 +31,7 @@ export default {
       answersWithLength: [],
       scatterChart: null,
       resizeTimeout: null,
+      disabled: false,
     };
   },
   components: {
@@ -87,6 +88,7 @@ export default {
         maskColor: "rgba(255, 255, 255, 0.8)",
         zlevel: 0,
       });
+      this.disabled = true;
 
       const params = {
         start: this.start,
@@ -96,6 +98,7 @@ export default {
       const res = await getAnswersWithLength(params);
       this.answersWithLength = res.data;
 
+      this.disabled = false;
       this.scatterChart.hideLoading();
     },
     initScatterChart() {
