@@ -167,26 +167,98 @@ export default {
           {
             name: "Accepted",
             type: "scatter",
-            data: this.displayedData
-              .filter((item) => item.isAccepted)
-              .map((item) => ({
-                value: [item.reputation, item.upVoteCount],
-                itemStyle: { color: "#2ec7c9" },
-                symbolSize: 7,
-                ...item,
-              })),
+            data: (() => {
+              const filteredData = this.displayedData.filter(
+                (item) => item.isAccepted
+              );
+
+              const total = filteredData.reduce(
+                (acc, item) => {
+                  acc.reputation = acc.reputation + item.reputation / 100;
+                  acc.upVoteCount = acc.upVoteCount + item.upVoteCount;
+                  acc.downVoteCount = acc.downVoteCount + item.downVoteCount;
+                  return acc;
+                },
+                { reputation: 0, upVoteCount: 0, downVoteCount: 0 }
+              );
+
+              const average = {
+                reputation: (
+                  (total.reputation / filteredData.length) *
+                  100
+                ).toFixed(2),
+                upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
+                  2
+                ),
+                downVoteCount: (
+                  total.downVoteCount / filteredData.length
+                ).toFixed(2),
+              };
+
+              return [
+                ...filteredData.map((item) => ({
+                  value: [item.reputation, item.upVoteCount],
+                  itemStyle: { color: "#2ec7c9" },
+                  symbolSize: 7,
+                  ...item,
+                })),
+                {
+                  value: [average.reputation, average.upVoteCount],
+                  itemStyle: { color: "#2ec7c9" },
+                  symbolSize: 50,
+                  ...average,
+                  isAccepted: null,
+                },
+              ];
+            })(),
           },
           {
             name: "Not Accepted",
             type: "scatter",
-            data: this.displayedData
-              .filter((item) => !item.isAccepted)
-              .map((item) => ({
-                value: [item.reputation, item.upVoteCount],
-                itemStyle: { color: "#b6a2de" },
-                symbolSize: 7,
-                ...item,
-              })),
+            data: (() => {
+              const filteredData = this.displayedData.filter(
+                (item) => !item.isAccepted
+              );
+
+              const total = filteredData.reduce(
+                (acc, item) => {
+                  acc.reputation = acc.reputation + item.reputation / 100;
+                  acc.upVoteCount = acc.upVoteCount + item.upVoteCount;
+                  acc.downVoteCount = acc.downVoteCount + item.downVoteCount;
+                  return acc;
+                },
+                { reputation: 0, upVoteCount: 0, downVoteCount: 0 }
+              );
+
+              const average = {
+                reputation: (
+                  (total.reputation / filteredData.length) *
+                  100
+                ).toFixed(2),
+                upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
+                  2
+                ),
+                downVoteCount: (
+                  total.downVoteCount / filteredData.length
+                ).toFixed(2),
+              };
+
+              return [
+                ...filteredData.map((item) => ({
+                  value: [item.reputation, item.upVoteCount],
+                  itemStyle: { color: "#b6a2de" },
+                  symbolSize: 7,
+                  ...item,
+                })),
+                {
+                  value: [average.reputation, average.upVoteCount],
+                  itemStyle: { color: "#b6a2de" },
+                  symbolSize: 50,
+                  ...average,
+                  isAccepted: null,
+                },
+              ];
+            })(),
           },
         ],
       });

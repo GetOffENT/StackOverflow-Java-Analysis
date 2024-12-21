@@ -36,10 +36,7 @@
         Scatter Plot of Answer Data: Upvotes vs Duration
       </h3>
       <div style="justify-self: right; margin-right: 150px">
-        <span
-          class="define-span"
-          @click="dialogVisible = true"
-          v-if="buttonText === 'details'"
+        <span class="define-span" @click="dialogVisible = true"
           >Define "High-quality"</span
         >
         <el-button @click="switchChart">{{ this.buttonText }}</el-button>
@@ -54,7 +51,7 @@
     >
       <el-form :model="filter" label-width="140px">
         <!-- upVoteCount -->
-        <el-form-item label="UpVote Count >">
+        <el-form-item label="UpVote Count ≥">
           <el-input-number
             v-model="filter.upVoteCount"
             :min="0"
@@ -63,7 +60,7 @@
         </el-form-item>
 
         <!-- downVoteCount -->
-        <el-form-item label="DownVote Count <">
+        <el-form-item label="DownVote Count ≤">
           <el-input-number
             v-model="filter.downVoteCount"
             :min="0"
@@ -234,8 +231,12 @@ export default {
   methods: {
     handleDialogClose() {
       this.dialogVisible = false;
-      this.filterLineData();
-      this.initLineChart();
+      if (this.buttonText === "details") {
+        this.filterLineData();
+        this.initLineChart();
+      } else {
+        this.initScatterChart();
+      }
     },
     switchChart() {
       if (this.buttonText === "details") {
@@ -513,6 +514,8 @@ export default {
             "First & Not Accepted",
             "Accepted & First",
             "Not Accepted & Not First",
+            "High-quality",
+            "Non-high-quality",
           ],
           top: "top",
           left: "center",
@@ -552,15 +555,21 @@ export default {
                 (acc, item) => {
                   acc.duration += item.duration / 10000;
                   acc.upVoteCount += item.upVoteCount;
+                  acc.downVoteCount += item.downVoteCount;
                   return acc;
                 },
-                { duration: 0, upVoteCount: 0 }
+                { duration: 0, upVoteCount: 0, downVoteCount: 0 }
               );
 
-              const averageDuration =
-                (total.duration / filteredData.length) * 10000;
-              const averageUpVoteCount =
-                total.upVoteCount / filteredData.length;
+              const average = {
+                duration: (total.duration / filteredData.length) * 10000,
+                upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
+                  2
+                ),
+                downVoteCount: (
+                  total.downVoteCount / filteredData.length
+                ).toFixed(2),
+              };
 
               return [
                 // 映射过滤后的数据
@@ -572,13 +581,11 @@ export default {
                 })),
                 // 添加平均值数据点
                 {
-                  value: [toDays(averageDuration), averageUpVoteCount],
+                  value: [toDays(average.duration), average.upVoteCount],
                   itemStyle: { color: "#2ec7c9" },
                   symbolSize: 50,
                   name: "Average",
-                  duration: averageDuration, // 平均 duration 原始值
-                  upVoteCount: averageUpVoteCount,
-                  downVoteCount: null,
+                  ...average,
                   isAccepted: null,
                   first: null,
                 },
@@ -599,15 +606,21 @@ export default {
                 (acc, item) => {
                   acc.duration += item.duration / 10000;
                   acc.upVoteCount += item.upVoteCount;
+                  acc.downVoteCount += item.downVoteCount;
                   return acc;
                 },
-                { duration: 0, upVoteCount: 0 }
+                { duration: 0, upVoteCount: 0, downVoteCount: 0 }
               );
 
-              const averageDuration =
-                (total.duration / filteredData.length) * 10000;
-              const averageUpVoteCount =
-                total.upVoteCount / filteredData.length;
+              const average = {
+                duration: (total.duration / filteredData.length) * 10000,
+                upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
+                  2
+                ),
+                downVoteCount: (
+                  total.downVoteCount / filteredData.length
+                ).toFixed(2),
+              };
 
               return [
                 // 映射过滤后的数据
@@ -619,13 +632,11 @@ export default {
                 })),
                 // 添加平均值数据点
                 {
-                  value: [toDays(averageDuration), averageUpVoteCount],
+                  value: [toDays(average.duration), average.upVoteCount],
                   itemStyle: { color: "#b6a2de" },
                   symbolSize: 50,
                   name: "Average",
-                  duration: averageDuration, // 平均 duration 原始值
-                  upVoteCount: averageUpVoteCount,
-                  downVoteCount: null,
+                  ...average,
                   isAccepted: null,
                   first: null,
                 },
@@ -646,15 +657,21 @@ export default {
                 (acc, item) => {
                   acc.duration += item.duration / 10000;
                   acc.upVoteCount += item.upVoteCount;
+                  acc.downVoteCount += item.downVoteCount;
                   return acc;
                 },
-                { duration: 0, upVoteCount: 0 }
+                { duration: 0, upVoteCount: 0, downVoteCount: 0 }
               );
 
-              const averageDuration =
-                (total.duration / filteredData.length) * 10000;
-              const averageUpVoteCount =
-                total.upVoteCount / filteredData.length;
+              const average = {
+                duration: (total.duration / filteredData.length) * 10000,
+                upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
+                  2
+                ),
+                downVoteCount: (
+                  total.downVoteCount / filteredData.length
+                ).toFixed(2),
+              };
 
               return [
                 // 映射过滤后的数据
@@ -666,13 +683,11 @@ export default {
                 })),
                 // 添加平均值数据点
                 {
-                  value: [toDays(averageDuration), averageUpVoteCount],
+                  value: [toDays(average.duration), average.upVoteCount],
                   itemStyle: { color: "#5ab1ef" },
                   symbolSize: 50,
                   name: "Average",
-                  duration: averageDuration, // 平均 duration 原始值
-                  upVoteCount: averageUpVoteCount,
-                  downVoteCount: null,
+                  ...average,
                   isAccepted: null,
                   first: null,
                 },
@@ -693,15 +708,21 @@ export default {
                 (acc, item) => {
                   acc.duration += item.duration / 10000;
                   acc.upVoteCount += item.upVoteCount;
+                  acc.downVoteCount += item.downVoteCount;
                   return acc;
                 },
-                { duration: 0, upVoteCount: 0 }
+                { duration: 0, upVoteCount: 0, downVoteCount: 0 }
               );
 
-              const averageDuration =
-                (total.duration / filteredData.length) * 10000;
-              const averageUpVoteCount =
-                total.upVoteCount / filteredData.length;
+              const average = {
+                duration: (total.duration / filteredData.length) * 10000,
+                upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
+                  2
+                ),
+                downVoteCount: (
+                  total.downVoteCount / filteredData.length
+                ).toFixed(2),
+              };
 
               return [
                 // 映射过滤后的数据
@@ -713,13 +734,127 @@ export default {
                 })),
                 // 添加平均值数据点
                 {
-                  value: [toDays(averageDuration), averageUpVoteCount],
+                  value: [toDays(average.duration), average.upVoteCount],
                   itemStyle: { color: "#ffb980" },
                   symbolSize: 50,
                   name: "Average",
-                  duration: averageDuration, // 平均 duration 原始值
-                  upVoteCount: averageUpVoteCount,
-                  downVoteCount: null,
+                  ...average,
+                  isAccepted: null,
+                  first: null,
+                },
+              ];
+            })(),
+          },
+          {
+            name: "High-quality",
+            type: "scatter",
+            data: (() => {
+              const filteredData = this.displayedAllAnswerData.filter(
+                (item) => {
+                  let highQualityFlag = false;
+                  if (this.filter.orAccepted && this.filter.isAccepted) {
+                    if (item.isAccepted) {
+                      highQualityFlag = true;
+                    } else {
+                      highQualityFlag =
+                        this.filter.upVoteCount <= item.upVoteCount &&
+                        item.downVoteCount <= this.filter.downVoteCount;
+                    }
+                  } else {
+                    highQualityFlag =
+                      this.filter.upVoteCount <= item.upVoteCount &&
+                      item.downVoteCount <= this.filter.downVoteCount &&
+                      (this.filter.isAccepted ? item.isAccepted : true);
+                  }
+                  return highQualityFlag;
+                }
+              );
+
+              const total = filteredData.reduce(
+                (acc, item) => {
+                  acc.duration += item.duration / 10000;
+                  acc.upVoteCount += item.upVoteCount;
+                  acc.downVoteCount += item.downVoteCount;
+                  return acc;
+                },
+                { duration: 0, upVoteCount: 0, downVoteCount: 0 }
+              );
+
+              const average = {
+                duration: (total.duration / filteredData.length) * 10000,
+                upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
+                  2
+                ),
+                downVoteCount: (
+                  total.downVoteCount / filteredData.length
+                ).toFixed(2),
+              };
+
+              return [
+                {
+                  value: [toDays(average.duration), average.upVoteCount],
+                  itemStyle: { color: "#d87a80" },
+                  symbolSize: 50,
+                  name: "Average",
+                  ...average,
+                  isAccepted: null,
+                  first: null,
+                },
+              ];
+            })(),
+          },
+          {
+            name: "Non-high-quality",
+            type: "scatter",
+            data: (() => {
+              const filteredData = this.displayedAllAnswerData.filter(
+                (item) => {
+                  let highQualityFlag = false;
+                  if (this.filter.orAccepted && this.filter.isAccepted) {
+                    if (item.isAccepted) {
+                      highQualityFlag = true;
+                    } else {
+                      highQualityFlag =
+                        this.filter.upVoteCount <= item.upVoteCount &&
+                        item.downVoteCount <= this.filter.downVoteCount;
+                    }
+                  } else {
+                    highQualityFlag =
+                      this.filter.upVoteCount <= item.upVoteCount &&
+                      item.downVoteCount <= this.filter.downVoteCount &&
+                      (this.filter.isAccepted ? item.isAccepted : true);
+                  }
+                  return !highQualityFlag;
+                }
+              );
+
+              const total = filteredData.reduce(
+                (acc, item) => {
+                  acc.duration += item.duration / 10000;
+                  acc.upVoteCount += item.upVoteCount;
+                  acc.downVoteCount += item.downVoteCount;
+                  return acc;
+                },
+                { duration: 0, upVoteCount: 0, downVoteCount: 0 }
+              );
+
+              const average = {
+                duration: (total.duration / filteredData.length) * 10000,
+                upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
+                  2
+                ),
+                downVoteCount: (
+                  total.downVoteCount / filteredData.length
+                ).toFixed(2),
+              };
+
+              return [
+                {
+                  value: [toDays(average.duration), average.upVoteCount],
+                  itemStyle: { color: "#8d98b3" },
+                  symbolSize: 50,
+                  name: "Average",
+                  ...average,
                   isAccepted: null,
                   first: null,
                 },

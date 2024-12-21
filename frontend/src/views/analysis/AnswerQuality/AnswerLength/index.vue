@@ -170,26 +170,98 @@ export default {
           {
             name: "Accepted",
             type: "scatter",
-            data: this.displayedData
-              .filter((item) => item.isAccepted)
-              .map((item) => ({
-                value: [item.length, item.upVoteCount],
-                itemStyle: { color: "#2ec7c9" },
-                symbolSize: 7,
-                ...item,
-              })),
+            data: (() => {
+              const filteredData = this.displayedData.filter(
+                (item) => item.isAccepted
+              );
+
+              const total = filteredData.reduce(
+                (acc, item) => {
+                  acc.length = acc.length + item.length / 100;
+                  acc.upVoteCount = acc.upVoteCount + item.upVoteCount;
+                  acc.downVoteCount = acc.downVoteCount + item.downVoteCount;
+                  return acc;
+                },
+                { length: 0, upVoteCount: 0, downVoteCount: 0 }
+              );
+
+              const average = {
+                length: (
+                  (total.length / filteredData.length) *
+                  100
+                ).toFixed(2),
+                upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
+                  2
+                ),
+                downVoteCount: (
+                  total.downVoteCount / filteredData.length
+                ).toFixed(2),
+              };
+
+              return [
+                ...filteredData.map((item) => ({
+                  value: [item.length, item.upVoteCount],
+                  itemStyle: { color: "#2ec7c9" },
+                  symbolSize: 7,
+                  ...item,
+                })),
+                {
+                  value: [average.length, average.upVoteCount],
+                  itemStyle: { color: "#2ec7c9" },
+                  symbolSize: 50,
+                  ...average,
+                  isAccepted: null,
+                },
+              ];
+            })(),
           },
           {
             name: "Not Accepted",
             type: "scatter",
-            data: this.displayedData
-              .filter((item) => !item.isAccepted)
-              .map((item) => ({
-                value: [item.length, item.upVoteCount],
-                itemStyle: { color: "#b6a2de" },
-                symbolSize: 7,
-                ...item,
-              })),
+            data:(() => {
+              const filteredData = this.displayedData.filter(
+                (item) => !item.isAccepted
+              );
+
+              const total = filteredData.reduce(
+                (acc, item) => {
+                  acc.length = acc.length + item.length / 100;
+                  acc.upVoteCount = acc.upVoteCount + item.upVoteCount;
+                  acc.downVoteCount = acc.downVoteCount + item.downVoteCount;
+                  return acc;
+                },
+                { length: 0, upVoteCount: 0, downVoteCount: 0 }
+              );
+
+              const average = {
+                length: (
+                  (total.length / filteredData.length) *
+                  100
+                ).toFixed(2),
+                upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
+                  2
+                ),
+                downVoteCount: (
+                  total.downVoteCount / filteredData.length
+                ).toFixed(2),
+              };
+
+              return [
+                ...filteredData.map((item) => ({
+                  value: [item.length, item.upVoteCount],
+                  itemStyle: { color: "#b6a2de" },
+                  symbolSize: 7,
+                  ...item,
+                })),
+                {
+                  value: [average.length, average.upVoteCount],
+                  itemStyle: { color: "#b6a2de" },
+                  symbolSize: 50,
+                  ...average,
+                  isAccepted: null,
+                },
+              ];
+            })(),
           },
         ],
       });
