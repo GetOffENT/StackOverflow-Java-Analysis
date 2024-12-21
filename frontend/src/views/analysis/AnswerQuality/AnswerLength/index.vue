@@ -12,8 +12,64 @@
       <h3 style="justify-self: center; color: #606266">
         Scatter Plot of Answer Data: Upvotes vs Answer Length
       </h3>
-      <div ref="scatterChart" class="scatter-chart" style="height: 80vh"></div>
+      <div style="justify-self: right; margin-right: 150px">
+        <span class="define-span" @click="dialogVisible = true"
+          >Define "High-quality"</span
+        >
+        <el-button @click="switchChart">{{ this.buttonText }}</el-button>
+      </div>
+      <div ref="chart" class="chart" style="height: 80vh"></div>
     </div>
+    <el-dialog
+      title="Define a high-quality answer"
+      :visible.sync="dialogVisible"
+      width="500px"
+    >
+      <el-form :model="filter" label-width="140px">
+        <!-- upVoteCount -->
+        <el-form-item label="UpVote Count ≥">
+          <el-input-number
+            v-model="filter.upVoteCount"
+            :min="0"
+            placeholder="Enter minimum count"
+          />
+        </el-form-item>
+
+        <!-- downVoteCount -->
+        <el-form-item label="DownVote Count ≤">
+          <el-input-number
+            v-model="filter.downVoteCount"
+            :min="0"
+            placeholder="Enter maximum count"
+          />
+        </el-form-item>
+
+        <!-- Condition (or/and) -->
+        <el-form-item>
+          <el-row :gutter="20">
+            <el-col :span="8">
+              <el-select
+                v-model="filter.orAccepted"
+                placeholder="Select Condition"
+                :disabled="!filter.isAccepted"
+              >
+                <el-option :value="true" label="or"></el-option>
+                <el-option :value="false" label="and"></el-option>
+              </el-select>
+            </el-col>
+            <el-col :span="12">
+              <el-checkbox v-model="filter.isAccepted">Accepted</el-checkbox>
+            </el-col>
+          </el-row>
+        </el-form-item>
+      </el-form>
+
+      <!-- Dialog Footer -->
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">Cancel</el-button>
+        <el-button type="primary" @click="handleDialogClose">Confirm</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -34,9 +90,19 @@ export default {
       end: null,
       answersWithLength: [],
       displayedData: [],
-      scatterChart: null,
+      lineData: [],
+      chart: null,
       resizeTimeout: null,
       disabled: false,
+
+      filter: {
+        upVoteCount: 5,
+        downVoteCount: 100000,
+        orAccepted: true,
+        isAccepted: true,
+      },
+      buttonText: "details",
+      dialogVisible: false,
     };
   },
   components: {
@@ -56,7 +122,13 @@ export default {
     },
     displayedData: {
       handler() {
-        this.initScatterChart();
+        // this.initScatterChart();
+        if (this.buttonText === "details") {
+          this.filterLineData();
+          this.initLineChart();
+        } else {
+          this.initScatterChart();
+        }
       },
       deep: true,
     },
@@ -69,8 +141,80 @@ export default {
     window.removeEventListener("resize", this.debounceResize);
   },
   methods: {
+    handleDialogClose() {
+      this.dialogVisible = false;
+      if (this.buttonText === "details") {
+        this.filterLineData();
+        this.initLineChart();
+      } else {
+        this.initScatterChart();
+      }
+    },
+    switchChart() {
+      if (this.buttonText === "details") {
+        this.buttonText = "back";
+        this.initScatterChart();
+      } else {
+        this.buttonText = "details";
+        this.initLineChart();
+      }
+    },
+    filterLineData() {
+      // 把displayedData按照bins(length方向)分组, count计数, xAxis为从bins[1]开始到bins[length-1]
+      const bins = [0, 10, 100, 1000, 10000, 100000, 1000000, 10000000];
+      this.lineData = bins
+        .map((bin, index) => {
+          if (index !== 0) {
+            let highQualityCount = 0,
+              nonHighQualityCount = 0;
+            for (let i = 0; i < this.displayedData.length; i++) {
+              const item = this.displayedData[i];
+              if (item.length > bins[index - 1] && item.length <= bin) {
+                let highQualityFlag = false;
+                if (this.filter.orAccepted && this.filter.isAccepted) {
+                  if (item.isAccepted) {
+                    highQualityFlag = true;
+                  } else {
+                    highQualityFlag =
+                      this.filter.upVoteCount <= item.upVoteCount &&
+                      item.downVoteCount <= this.filter.downVoteCount;
+                  }
+                } else {
+                  highQualityFlag =
+                    this.filter.upVoteCount <= item.upVoteCount &&
+                    item.downVoteCount <= this.filter.downVoteCount &&
+                    (this.filter.isAccepted ? item.isAccepted : true);
+                }
+                if (highQualityFlag) {
+                  highQualityCount += 1;
+                } else {
+                  nonHighQualityCount += 1;
+                }
+              }
+            }
+            if (index === bins.length - 1) {
+              return {
+                xAxis: `${bins[index - 1]}+`,
+                highQualityCount,
+                nonHighQualityCount,
+              };
+            }
+            return {
+              xAxis: `${bins[index - 1]}-${bins[index]}`,
+              highQualityCount,
+              nonHighQualityCount,
+            };
+          }
+        })
+        .slice(1);
+      console.log(this.lineData);
+    },
     handleResize() {
-      this.initScatterChart();
+      if (this.buttonText === "back") {
+        this.initScatterChart();
+      } else {
+        this.initLineChart();
+      }
     },
     debounceResize() {
       clearTimeout(this.resizeTimeout);
@@ -83,10 +227,10 @@ export default {
       this.endDate = dateRange["end"];
     },
     async fetchData() {
-      if (!this.scatterChart) {
-        this.scatterChart = echarts.init(this.$refs.scatterChart, "macarons");
+      if (!this.chart) {
+        this.chart = echarts.init(this.$refs.chart, "macarons");
       }
-      this.scatterChart.showLoading({
+      this.chart.showLoading({
         text: "Loading...",
         color: "#5470C6",
         textColor: "#000",
@@ -111,21 +255,89 @@ export default {
             dayjs(item.answerCreateDate).isBefore(this.end)
         );
       } else {
-        this.displayedData = JSON.parse(
-          JSON.stringify(this.answersWithLength)
-        );
+        this.displayedData = JSON.parse(JSON.stringify(this.answersWithLength));
       }
 
       this.disabled = false;
-      this.scatterChart.hideLoading();
+      this.chart.hideLoading();
+    },
+    initLineChart() {
+      if (this.chart) {
+        this.chart.dispose();
+      }
+      this.chart = echarts.init(this.$refs.chart, "macarons");
+
+      this.chart.setOption({
+        xAxis: {
+          name: "Answer Length (characters)",
+          type: "category",
+          boundaryGap: false,
+          data: this.lineData.map((item) => item.xAxis),
+          axisTick: {
+            show: false,
+          },
+        },
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
+          },
+          padding: [5, 10],
+        },
+        yAxis: {
+          name: "Answer Count",
+          axisTick: {
+            show: false,
+          },
+        },
+        legend: {
+          data: ["High-quality", "Non-high-quality"],
+        },
+        series: [
+          {
+            name: "High-quality",
+            type: "line",
+            data: this.lineData.map((item) => item.highQualityCount),
+            itemStyle: {
+              normal: {
+                color: "#FF005A",
+                lineStyle: {
+                  color: "#FF005A",
+                  width: 2,
+                },
+              },
+            },
+            smooth: true,
+            animationDuration: 2800,
+            animationEasing: "cubicInOut",
+          },
+          {
+            name: "Non-high-quality",
+            type: "line",
+            data: this.lineData.map((item) => item.nonHighQualityCount),
+            itemStyle: {
+              normal: {
+                color: "#3888fa",
+                lineStyle: {
+                  color: "#3888fa",
+                  width: 2,
+                },
+              },
+            },
+            smooth: true,
+            animationDuration: 2800,
+            animationEasing: "cubicInOut",
+          },
+        ],
+      });
     },
     initScatterChart() {
-      if (this.scatterChart) {
-        this.scatterChart.dispose();
+      if (this.chart) {
+        this.chart.dispose();
       }
-      this.scatterChart = echarts.init(this.$refs.scatterChart, "macarons");
+      this.chart = echarts.init(this.$refs.chart, "macarons");
 
-      this.scatterChart.setOption({
+      this.chart.setOption({
         tooltip: {
           trigger: "item",
           formatter: function (params) {
@@ -139,7 +351,12 @@ export default {
           },
         },
         legend: {
-          data: ["Accepted", "Not Accepted"],
+          data: [
+            "Accepted",
+            "Not Accepted",
+            "High-quality",
+            "Non-high-quality",
+          ],
           top: "top",
           left: "center",
         },
@@ -186,10 +403,7 @@ export default {
               );
 
               const average = {
-                length: (
-                  (total.length / filteredData.length) *
-                  100
-                ).toFixed(2),
+                length: ((total.length / filteredData.length) * 100).toFixed(2),
                 upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
                   2
                 ),
@@ -218,7 +432,7 @@ export default {
           {
             name: "Not Accepted",
             type: "scatter",
-            data:(() => {
+            data: (() => {
               const filteredData = this.displayedData.filter(
                 (item) => !item.isAccepted
               );
@@ -234,10 +448,7 @@ export default {
               );
 
               const average = {
-                length: (
-                  (total.length / filteredData.length) *
-                  100
-                ).toFixed(2),
+                length: ((total.length / filteredData.length) * 100).toFixed(2),
                 upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
                   2
                 ),
@@ -263,6 +474,122 @@ export default {
               ];
             })(),
           },
+          {
+            name: "High-quality",
+            type: "scatter",
+            data: (() => {
+              const filteredData = this.displayedData.filter((item) => {
+                let highQualityFlag = false;
+                if (this.filter.orAccepted && this.filter.isAccepted) {
+                  if (item.isAccepted) {
+                    highQualityFlag = true;
+                  } else {
+                    highQualityFlag =
+                      this.filter.upVoteCount <= item.upVoteCount &&
+                      item.downVoteCount <= this.filter.downVoteCount;
+                  }
+                } else {
+                  highQualityFlag =
+                    this.filter.upVoteCount <= item.upVoteCount &&
+                    item.downVoteCount <= this.filter.downVoteCount &&
+                    (this.filter.isAccepted ? item.isAccepted : true);
+                }
+                return highQualityFlag;
+              });
+
+              const total = filteredData.reduce(
+                (acc, item) => {
+                  acc.length += item.length / 10000;
+                  acc.upVoteCount += item.upVoteCount;
+                  acc.downVoteCount += item.downVoteCount;
+                  return acc;
+                },
+                { length: 0, upVoteCount: 0, downVoteCount: 0 }
+              );
+
+              const average = {
+                length: (
+                  (total.length / filteredData.length) *
+                  10000
+                ).toFixed(2),
+                upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
+                  2
+                ),
+                downVoteCount: (
+                  total.downVoteCount / filteredData.length
+                ).toFixed(2),
+              };
+
+              return [
+                {
+                  value: [average.length, average.upVoteCount],
+                  itemStyle: { color: "#5ab1ef" },
+                  symbolSize: 50,
+                  name: "Average",
+                  ...average,
+                  isAccepted: null,
+                },
+              ];
+            })(),
+          },
+          {
+            name: "Non-high-quality",
+            type: "scatter",
+            data: (() => {
+              const filteredData = this.displayedData.filter((item) => {
+                let highQualityFlag = false;
+                if (this.filter.orAccepted && this.filter.isAccepted) {
+                  if (item.isAccepted) {
+                    highQualityFlag = true;
+                  } else {
+                    highQualityFlag =
+                      this.filter.upVoteCount <= item.upVoteCount &&
+                      item.downVoteCount <= this.filter.downVoteCount;
+                  }
+                } else {
+                  highQualityFlag =
+                    this.filter.upVoteCount <= item.upVoteCount &&
+                    item.downVoteCount <= this.filter.downVoteCount &&
+                    (this.filter.isAccepted ? item.isAccepted : true);
+                }
+                return !highQualityFlag;
+              });
+
+              const total = filteredData.reduce(
+                (acc, item) => {
+                  acc.length += item.length / 10000;
+                  acc.upVoteCount += item.upVoteCount;
+                  acc.downVoteCount += item.downVoteCount;
+                  return acc;
+                },
+                { length: 0, upVoteCount: 0, downVoteCount: 0 }
+              );
+
+              const average = {
+                length: (
+                  (total.length / filteredData.length) *
+                  10000
+                ).toFixed(2),
+                upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
+                  2
+                ),
+                downVoteCount: (
+                  total.downVoteCount / filteredData.length
+                ).toFixed(2),
+              };
+
+              return [
+                {
+                  value: [average.length, average.upVoteCount < 1 ? 1 : average.upVoteCount],
+                  itemStyle: { color: "#d87a80" },
+                  symbolSize: 50,
+                  name: "Average",
+                  ...average,
+                  isAccepted: null,
+                },
+              ];
+            })(),
+          }
         ],
       });
     },
@@ -270,4 +597,16 @@ export default {
 };
 </script>
 
-<style></style>
+<style scoped>
+.define-span {
+  margin-right: 30px;
+  color: #3498db;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.define-span:hover {
+  color: #1d4e89;
+  text-decoration: underline;
+}
+</style>

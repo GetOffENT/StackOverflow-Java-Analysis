@@ -133,6 +133,7 @@ export default {
       loadingAcceptedAnswer: false,
       loadingFirstAnswer: false,
       loadingAllAnswer: false,
+      
       filter: {
         upVoteCount: 5,
         downVoteCount: 100000,
@@ -199,8 +200,8 @@ export default {
     displayedAllAnswerData: {
       handler() {
         // this.initScatterChart();
-        this.filterLineData();
         if (this.buttonText === "details") {
+          this.filterLineData();
           this.initLineChart();
         } else {
           this.initScatterChart();
