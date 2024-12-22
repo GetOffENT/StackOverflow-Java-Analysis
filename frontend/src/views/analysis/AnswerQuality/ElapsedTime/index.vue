@@ -98,6 +98,7 @@
 </template>
 
 <script>
+import { highQualityFilter } from "../utils";
 import {
   getFirstAnswersWithCreateDate,
   getAcceptedAnswersWithCreateDate,
@@ -106,6 +107,7 @@ import {
 import TimeLine from "@/components/TimeLine";
 import dayjs from "dayjs";
 import * as echarts from "echarts";
+import * as ecStat from "echarts-stat";
 require("echarts/theme/macarons");
 
 export default {
@@ -133,7 +135,7 @@ export default {
       loadingAcceptedAnswer: false,
       loadingFirstAnswer: false,
       loadingAllAnswer: false,
-      
+
       filter: {
         upVoteCount: 5,
         downVoteCount: 100000,
@@ -248,7 +250,7 @@ export default {
         this.initLineChart();
       }
     },
-    filterLineData() {
+    filterLineData1() {
       // 把displayedAllAnswerData按照bins(duration方向)分组, count计数, xAxis为从bins[1]开始到bins[length-1]
       const bins = [
         "0m",
@@ -327,6 +329,56 @@ export default {
           }
         })
         .slice(1);
+    },
+    filterLineData() {
+      // 把displayedAllAnswerData分为按照durantion从小到大分为N组聚合，统计每组的高质量率
+      const N = 100;
+      const groupSize = Math.ceil(this.displayedAllAnswerData.length / N);
+      const groupedResults = [];
+      for (let i = 0; i < N; i++) {
+        const groupStart = i * groupSize;
+        const groupEnd = Math.min(
+          groupStart + groupSize,
+          this.displayedAllAnswerData.length
+        );
+        const group = this.displayedAllAnswerData.slice(groupStart, groupEnd);
+
+        // 统计高质量的比例
+        const highQualityCount = group.filter((item) =>
+          highQualityFilter(item, this.filter)
+        ).length;
+        const highQualityRate = group.length
+          ? highQualityCount / group.length
+          : 0;
+        // 统计改组平均upvote和downvote
+        const upVoteCount =
+          group.reduce((acc, item) => acc + item.upVoteCount, 0) / group.length;
+        const downVoteCount =
+          group.reduce((acc, item) => acc + item.downVoteCount, 0) /
+          group.length;
+
+        // 统计Accepted和First的比例
+        const acceptedRate = group.length
+          ? group.filter((item) => item.isAccepted).length / group.length
+          : 0;
+        const firstRate = group.length
+          ? group.filter((item) => item.first).length / group.length
+          : 0;
+
+        // 获取该组的最大 duration
+        const xAxis = group[group.length - 1]?.duration || 0;
+
+        groupedResults.push({
+          highQualityRate,
+          xAxis: xAxis / 1000,
+          upVoteCount,
+          downVoteCount,
+          acceptedRate,
+          firstRate,
+        });
+      }
+
+      this.lineData = JSON.parse(JSON.stringify(groupedResults));
     },
     handleResize() {
       this.initPieChart1();
@@ -423,62 +475,130 @@ export default {
       }
       this.bottomChart = echarts.init(this.$refs.bottomChart, "macarons");
 
+      const regression = ecStat.regression(
+        "logarithmic",
+        this.lineData.map((item) => [
+          parseFloat(item.xAxis),
+          item.highQualityRate * 100,
+        ])
+      );
+
+      const accRegression = ecStat.regression(
+        "logarithmic",
+        this.lineData.map((item) => [
+          parseFloat(item.xAxis),
+          item.acceptedRate * 100,
+        ])
+      );
+
+      const firstRegression = ecStat.regression(
+        "logarithmic",
+        this.lineData.map((item) => [
+          parseFloat(item.xAxis),
+          item.firstRate * 100,
+        ])
+      );
+
       this.bottomChart.setOption({
-        xAxis: {
-          name: "Duration",
-          type: "category",
-          boundaryGap: false,
-          data: this.lineData.map((item) => item.xAxis),
-          axisTick: {
-            show: false,
-          },
+        title: {
+          text: "Scatter Plot with Regression Line",
         },
         tooltip: {
-          trigger: "axis",
+          trigger: "item",
           axisPointer: {
             type: "cross",
           },
-          padding: [5, 10],
-        },
-        yAxis: {
-          name: "Answer Count",
-          axisTick: {
-            show: false,
-          },
         },
         legend: {
-          data: ["High-quality", "Non-high-quality"],
+          data: ["High-quality Rate", "Accepted Rate", "First Rate"],
+          selected: {
+            "High-quality Rate": true,
+            "Accepted Rate": false,
+            "First Rate": false,
+          },
+        },
+        xAxis: {
+          type: "category", // 分类型 x 轴
+          name: "Elapsed Time (s)",
+          nameLocation: "middle",
+          nameGap: 30,
+          data: this.lineData.map((item) => item.xAxis), // 设置分类
+        },
+        yAxis: {
+          type: "value",
+          name: "Rate (%)",
+          nameLocation: "middle",
+          nameGap: 50,
         },
         series: [
           {
-            name: "High-quality",
-            type: "line",
-            data: this.lineData.map((item) => item.highQualityCount),
-            itemStyle: {
-              normal: {
-                color: "#FF005A",
-                lineStyle: {
-                  color: "#FF005A",
-                  width: 2,
-                },
+            name: "Scatter",
+            type: "scatter",
+            data: (() => {
+              return this.lineData.map((item) => ({
+                value: [item.xAxis.toString(), item.highQualityRate * 100],
+                itemStyle: { color: "#2ec7c9" },
+                symbolSize: 7,
+                ...item,
+              }));
+            })(),
+            tooltip: {
+              formatter: (params) => {
+                const data = params.data;
+                return `
+                Elapsed Time: ${data.value[0]} s <br/>
+                High Quality Rate: ${data.value[1].toFixed(2)}% <br/>
+                Accepted Rate: ${data.acceptedRate.toFixed(2)} <br/>
+                First Rate: ${data.firstRate.toFixed(2)} <br/>
+                Average Upvote: ${data.upVoteCount.toFixed(2)} <br/>
+                Average Downvote: ${data.downVoteCount.toFixed(2)} <br/>
+                `;
               },
+            },
+          },
+          {
+            name: "High-quality Rate",
+            type: "line",
+            showSymbol: false,
+            data: regression.points.map((item) => [
+              item[0].toString(),
+              item[1],
+            ]),
+            lineStyle: {
+              color: "#b6a2de",
+              width: 3,
             },
             smooth: true,
             animationDuration: 2800,
             animationEasing: "cubicInOut",
           },
           {
-            name: "Non-high-quality",
+            name: "Accepted Rate",
             type: "line",
-            data: this.lineData.map((item) => item.nonHighQualityCount),
-            itemStyle: {
-              normal: {
-                color: "#3888fa",
-                lineStyle: {
-                  color: "#3888fa",
-                  width: 2,
-                },
-              },
+            showSymbol: false,
+            data: accRegression.points.map((item) => [
+              item[0].toString(),
+              item[1],
+            ]),
+            lineStyle: {
+              color: "#5ab1ef",
+              width: 3,
+            },
+            smooth: true,
+            animationDuration: 2800,
+            animationEasing: "cubicInOut",
+          },
+          {
+            name: "First Rate",
+            type: "line",
+            showSymbol: false,
+            data: firstRegression.points.map((item) => [
+              item[0].toString(),
+              item[1],
+            ]),
+            lineStyle: {
+              color: "#ffb980",
+              width: 3,
             },
             smooth: true,
             animationDuration: 2800,
@@ -851,7 +971,10 @@ export default {
 
               return [
                 {
-                  value: [toDays(average.duration), average.upVoteCount],
+                  value: [
+                    toDays(average.duration),
+                    average.upVoteCount < 1 ? 1 : average.upVoteCount,
+                  ],
                   itemStyle: { color: "#8d98b3" },
                   symbolSize: 50,
                   name: "Average",
