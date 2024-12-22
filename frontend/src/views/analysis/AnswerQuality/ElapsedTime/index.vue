@@ -201,6 +201,8 @@ export default {
     },
     displayedAllAnswerData: {
       handler() {
+        this.fetchAcceptedAnswers();
+        this.fetchFirstAnswers();
         // this.initScatterChart();
         if (this.buttonText === "details") {
           this.filterLineData();
@@ -934,78 +936,49 @@ export default {
         zlevel: 0,
       });
     },
-    fetchData() {
-      this.fetchAcceptedAnswers();
-      this.fetchFirstAnswers();
-      this.fetchAllAnswers();
-    },
-    async fetchAcceptedAnswers() {
+    async fetchData() {
       if (!this.pieChart1) {
         this.pieChart1 = echarts.init(this.$refs.pieChart1, "macarons");
       }
       this.showLoading(this.pieChart1);
-      this.loadingAcceptedAnswer = true;
 
-      if (!this.acceptedAnswerData.length) {
-        const params = {
-          start: this.start,
-          end: this.end,
-        };
-
-        const res = await getAcceptedAnswersWithCreateDate(params);
-        this.acceptedAnswerData = res.data;
-      }
-      if (this.start && this.end) {
-        this.displayedAcceptedAnswerData = this.acceptedAnswerData.filter(
-          (item) =>
-            dayjs(item.answerCreateDate).isAfter(this.start) &&
-            dayjs(item.answerCreateDate).isBefore(this.end)
-        );
-      } else {
-        this.displayedAcceptedAnswerData = JSON.parse(
-          JSON.stringify(this.acceptedAnswerData)
-        );
-      }
-
-      this.loadingAcceptedAnswer = false;
-      this.pieChart1.hideLoading();
-    },
-    async fetchFirstAnswers() {
+      
       if (!this.pieChart2) {
         this.pieChart2 = echarts.init(this.$refs.pieChart2, "macarons");
       }
       this.showLoading(this.pieChart2);
+
+      
+      if (!this.bottomChart) {
+        this.bottomChart = echarts.init(this.$refs.bottomChart, "macarons");
+      }
+      this.showLoading(this.bottomChart);
+
+      await this.fetchAllAnswers();
+
+      this.bottomChart.hideLoading();
+    },
+    fetchAcceptedAnswers() {
+      this.loadingAcceptedAnswer = true;
+
+      this.displayedAcceptedAnswerData = this.displayedAllAnswerData.filter(
+        (item) => item.isAccepted
+      );
+
+      this.loadingAcceptedAnswer = false;
+      this.pieChart1.hideLoading();
+    },
+    fetchFirstAnswers() {
       this.loadingFirstAnswer = true;
 
-      if (!this.firstAnswerData.length) {
-        const params = {
-          start: this.start,
-          end: this.end,
-        };
-
-        const res = await getFirstAnswersWithCreateDate(params);
-        this.firstAnswerData = res.data;
-      }
-      if (this.start && this.end) {
-        this.displayedFirstAnswerData = this.firstAnswerData.filter(
-          (item) =>
-            dayjs(item.answerCreateDate).isAfter(this.start) &&
-            dayjs(item.answerCreateDate).isBefore(this.end)
-        );
-      } else {
-        this.displayedFirstAnswerData = JSON.parse(
-          JSON.stringify(this.firstAnswerData)
-        );
-      }
+      this.displayedFirstAnswerData = this.displayedAllAnswerData.filter(
+        (item) => item.first
+      );
 
       this.loadingFirstAnswer = false;
       this.pieChart2.hideLoading();
     },
     async fetchAllAnswers() {
-      if (!this.bottomChart) {
-        this.bottomChart = echarts.init(this.$refs.bottomChart, "macarons");
-      }
-      this.showLoading(this.bottomChart);
       this.loadingAllAnswer = true;
 
       if (!this.allAnswerData.length) {
@@ -1030,7 +1003,6 @@ export default {
       }
 
       this.loadingAllAnswer = false;
-      this.bottomChart.hideLoading();
     },
   },
 };

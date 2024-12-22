@@ -7,6 +7,7 @@ import cn.edu.sustech.stackoverflow.mapper.*;
 import cn.edu.sustech.stackoverflow.service.AnalysisService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -28,6 +29,7 @@ import java.util.stream.Stream;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AnalysisServiceImpl implements AnalysisService {
 
     private final QuestionMapper questionMapper;
@@ -447,7 +449,12 @@ public class AnalysisServiceImpl implements AnalysisService {
      */
     @Override
     public List<AnswerWithCreateDateVO> getAnswersWithCreateDate(LocalDateTime start, LocalDateTime end) {
-        return getAnswersByCondition(false, false, start, end);
+        long from = System.currentTimeMillis();
+
+        List<AnswerWithCreateDateVO> answersByCondition = getAnswersByCondition(false, false, start, end);
+
+        log.info("time cost: {}s", (System.currentTimeMillis() - from) / 1000.0);
+        return answersByCondition;
     }
 
     public List<AnswerWithCreateDateVO> getAnswersByCondition(boolean first, boolean accepted, LocalDateTime start, LocalDateTime end) {
