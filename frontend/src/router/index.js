@@ -90,23 +90,26 @@ export const constantRoutes = [
           {
             path: "elapsed-time",
             name: "ElapsedTime",
-            component: () => import("@/views/analysis/AnswerQuality/ElapsedTime/index"),
+            component: () =>
+              import("@/views/analysis/AnswerQuality/ElapsedTime/index"),
             meta: { title: "Elapsed Time" },
           },
           {
             path: "user-reputation",
             name: "UserReputation",
-            component: () => import("@/views/analysis/AnswerQuality/UserReputation/index"),
+            component: () =>
+              import("@/views/analysis/AnswerQuality/UserReputation/index"),
             meta: { title: "User Reputation" },
           },
           {
             path: "answer-length",
             name: "AnswerLength",
-            component: () => import("@/views/analysis/AnswerQuality/AnswerLength/index"),
+            component: () =>
+              import("@/views/analysis/AnswerQuality/AnswerLength/index"),
             meta: { title: "Answer Length" },
-          }
-        ]
-      }
+          },
+        ],
+      },
     ],
   },
 
@@ -116,31 +119,50 @@ export const constantRoutes = [
     redirect: "/restful/index",
     meta: { title: "RESTful API", icon: "el-icon-s-operation" },
     children: [
+      {
+        path: 'external-link',
+        children: [
           {
-            path: "toptopicfrequency", // 子路由路径
-            name: "TopTopicFrequency",
-            component: () => import("@/views/restful/TopTopicFrequencyPage"), // 新页面组件
-            meta: { title: "Top Topic Frequency" },
-          },
-          {
-            path: "topbugfrequency", // 子路由路径
-            name: "TopBugFrequency",
-            component: () => import("@/views/restful/TopBugFrequencyPage"), // 新页面组件
-            meta: { title: "Top Bug Frequency" },
-          },
-          {
-            path: "specifictopicfrequency", // 子路由路径
-            name: "SpecificTopicFrequency",
-            component: () => import("@/views/restful/SpecificTopicFrequency"), // 新页面组件
-            meta: { title: "Specific Topic Frequency" },
-          },
-          {
-            path: "specificbugfrequency", // 子路由路径
-            name: "SpecificBugFrequency",
-            component: () => import("@/views/restful/SpecificBugFrequency"), // 新页面组件
-            meta: { title: "Specific Bug Frequency" },
+            path: `${process.env.VUE_APP_BASE_API}/doc.html`,
+            meta: { title: 'Documentation', icon: 'documentation' }
           }
-          ]
+        ]
+      },
+      {
+        path: "toptopicfrequency", // 子路由路径
+        name: "TopTopicFrequency",
+        component: () => import("@/views/restful/TopTopicFrequencyPage"), // 新页面组件
+        meta: { title: "Top Topic Frequency" },
+      },
+      {
+        path: "topbugfrequency", // 子路由路径
+        name: "TopBugFrequency",
+        component: () => import("@/views/restful/TopBugFrequencyPage"), // 新页面组件
+        meta: { title: "Top Bug Frequency" },
+      },
+      {
+        path: "specifictopicfrequency", // 子路由路径
+        name: "SpecificTopicFrequency",
+        component: () => import("@/views/restful/SpecificTopicFrequency"), // 新页面组件
+        meta: { title: "Specific Topic Frequency" },
+      },
+      {
+        path: "specificbugfrequency", // 子路由路径
+        name: "SpecificBugFrequency",
+        component: () => import("@/views/restful/SpecificBugFrequency"), // 新页面组件
+        meta: { title: "Specific Bug Frequency" },
+      },
+    ],
+  },
+  {
+    path: "external-link",
+    component: Layout,
+    children: [
+      {
+        path: "https://github.com/GetOffENT/StackOverflow-Java-Analysis",
+        meta: { title: "External Link", icon: "link" },
+      },
+    ],
   },
 
   // 404 page must be placed at the end !!!
@@ -156,7 +178,6 @@ const createRouter = () =>
 
 const router = createRouter();
 
-// Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
 export function resetRouter() {
   const newRouter = createRouter();
   router.matcher = newRouter.matcher; // reset router
