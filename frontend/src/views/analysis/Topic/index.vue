@@ -18,7 +18,11 @@
       </el-form-item>
       <!-- 显示数量输入框 -->
       <el-form-item label="top N">
-        <el-input-number v-model="topN" :min="2" @change="debounceCountChange" />
+        <el-input-number
+          v-model="topN"
+          :min="2"
+          @change="debounceCountChange"
+        />
       </el-form-item>
 
       <!-- 查询按钮 -->
@@ -37,12 +41,28 @@
 
     <div class="chart-type-select">
       <el-tooltip content="word cloud" placement="top">
-        <div class="ciyun" @click="cloudChart">
+        <div
+          class="ciyun"
+          @click="
+            () => {
+              this.topN = 100;
+              this.cloudChart();
+            }
+          "
+        >
           <svg-icon icon-class="ciyun" />
         </div>
       </el-tooltip>
       <el-tooltip content="horizontal bar chart" placement="top">
-        <div class="horizontal-bar-chart" @click="staticChart">
+        <div
+          class="horizontal-bar-chart"
+          @click="
+            () => {
+              this.topN = 10;
+              this.staticChart();
+            }
+          "
+        >
           <svg-icon icon-class="horizontal-bar-chart" />
         </div>
       </el-tooltip>
@@ -73,38 +93,12 @@ export default {
       currentClick: "cloud",
       startDate: null,
       endDate: null,
-      topN: 10,
+      topN: 100,
       staticData: [], // 静态柱状图数据
       raceData: [], // 动态竞赛图数据
       chartWidth: 1200,
       barHeight: 50,
       margin: { top: 50, right: 150, bottom: 50, left: 150 },
-      colors: [
-        "#86D4FF",
-        "#FF8F6C",
-        "#2CF263",
-        "#9FA8F7",
-        "#1274FF",
-        "#E6613D",
-        "#FFC629",
-        "#FFAB2E",
-        "#F78289",
-        "#FF6C96",
-        "#45BFD4",
-        "#4E31FF",
-        "#31FBFB",
-        "#86D4FF",
-        "#BF8AFD",
-        "#FFF500",
-        "#DE58FF",
-        "#72ED7C",
-        "#0BEEB8",
-        "#931CFF",
-        "#3D25F2",
-        "#F995C8",
-        "#FBE9B4",
-        "#FF4AB6",
-      ],
       countTimeout: null,
     };
   },
@@ -156,6 +150,7 @@ export default {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
       const cloudChartContainer = document.getElementById("cloudChart");
+
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
 
@@ -169,13 +164,12 @@ export default {
 
       // 获取静态数据
       await this.fetchStaticData();
-      const wordCloudData = this.staticData.map((item) => ({
-        name: item.tagName,
-        value: item.count,
-        percentage: (item.percentage * 100).toFixed(2),
-      }));
 
       const chart = echarts.init(cloudChartContainer, "macarons");
+      const themeColors = chart._theme.color;
+      const themeColorsForTopOne = themeColors.slice(0, 3);
+      const themeColorsForOthers = themeColors.slice(3, themeColors.length);
+
       chart.setOption({
         tooltip: {
           show: true,
@@ -201,13 +195,6 @@ export default {
             textStyle: {
               fontFamily: "sans-serif",
               fontWeight: "bold",
-              normal: {
-                color: () => {
-                  return this.colors[
-                    Math.floor(Math.random() * this.colors.length)
-                  ];
-                },
-              },
             },
             emphasis: {
               focus: "self",
@@ -216,7 +203,26 @@ export default {
                 textShadowColor: "#333",
               },
             },
-            data: wordCloudData,
+            data: (() => {
+              return this.staticData.map((item, index) => {
+                return {
+                  name: item.tagName,
+                  value: item.count,
+                  percentage: (item.percentage * 100).toFixed(2),
+                  textStyle: {
+                    // 为每个词设置不同的颜色
+                    color:
+                      index === 0
+                        ? themeColorsForTopOne[
+                            Math.floor(Math.random() * themeColorsForTopOne.length)
+                          ]
+                        : themeColorsForOthers[
+                            Math.floor(Math.random() * themeColorsForOthers.length)
+                          ],
+                  },
+                };
+              });
+            })(),
           },
         ],
       });
@@ -256,6 +262,7 @@ export default {
     },
     async staticChart() {
       this.currentClick = "static";
+
       d3.select("#chart").selectAll("*").remove(); // 清空之前的图表
       await this.fetchStaticData();
 
@@ -342,6 +349,15 @@ export default {
     },
     async startRaceChart() {
       this.currentClick = "dynamic";
+      if (this.topN > 30) {
+        this.topN = 30;
+        this.$message({
+          message:
+            "The number of topics is too large, and only the top 30 topics are displayed for the Race Chart.",
+          type: "warning",
+        });
+      }
+
       d3.select("#chart").selectAll("*").remove(); // 清空之前的图表
       await this.fetchRaceData();
 
