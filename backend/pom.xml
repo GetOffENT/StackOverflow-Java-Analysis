@@ -11,7 +11,7 @@
     <groupId>cn.edu.sustech</groupId>
     <artifactId>stack-overflow-java-analysis</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
     <name>stack-overflow-java-analysis</name>
     <description>stack-overflow-java-analysis</description>
     <url/>
