@@ -506,7 +506,8 @@ public class AnalysisServiceImpl implements AnalysisService {
         if (accepted) {
             return stream.flatMap(List::stream).filter(AnswerWithCreateDateVO::getIsAccepted).toList();
         }
-        return stream.flatMap(List::stream).toList();
+        // 按照duration升序排序
+        return stream.flatMap(List::stream).sorted(Comparator.comparing(AnswerWithCreateDateVO::getDuration)).toList();
     }
 
     /**
@@ -548,6 +549,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                         .reputation(userMap.get(answer.getOwnerUserId()).getReputation())
                         .answerCreateDate(answer.getCreationDate())
                         .build())
+                // 按照reputation升序排序
+                .sorted(Comparator.comparing(AnswerWithUserReputationVO::getReputation))
                 .toList();
     }
 
@@ -576,6 +579,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                         .length(answer.getBody().length())
                         .answerCreateDate(answer.getCreationDate())
                         .build())
+                // 按照length升序排序
+                .sorted(Comparator.comparing(AnswerWithLengthVO::getLength))
                 .toList();
     }
 
