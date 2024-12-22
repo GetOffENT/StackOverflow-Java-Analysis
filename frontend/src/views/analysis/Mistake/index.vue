@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1 style="justify-self: center; margin-bottom: 30px">
-      Top N errors frequently discussed errors and exceptions
+      Top N frequently discussed errors and exceptions
     </h1>
     <el-form :inline="true" class="form" style="justify-self: center">
       <el-form-item label="top N" style="margin-right: 30px">
