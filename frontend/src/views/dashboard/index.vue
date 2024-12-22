@@ -5,7 +5,7 @@
     <panel-group />
 
     <el-row style="background: #fff; padding: 16px 16px 0; margin-bottom: 32px">
-      <line-chart :chart-data="lineChartData" />
+      <line-chart :chart-data="lineChartData" :loading="loading"/>
       <div class="chart-controls">
         <label>
           <input type="radio" value="monthly" v-model="timeScale" />
@@ -46,6 +46,7 @@ export default {
       chartData: [],
       lineChartData: [],
       timeScale: "monthly",
+      loading: true,
     };
   },
   watch: {
@@ -82,8 +83,12 @@ export default {
         end: this.end,
       };
 
+      this.loading = true;
+
       const { data } = await getCountInSingleMonth(params);
       this.chartData = data;
+
+      this.loading = false;
     },
     // 处理图表数据：根据时间刻度（月或年）来聚合数据
     processChartData() {
@@ -135,8 +140,8 @@ export default {
       return aggregatedData;
     },
   },
-  async created() {
-    await this.fetchData();
+  created() {
+    this.fetchData();
     // console.log(this.lineChartData);
   },
 };

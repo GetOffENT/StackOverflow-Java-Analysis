@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import echarts from "echarts";
+import * as echarts from "echarts";
 require("echarts/theme/macarons"); // echarts theme
 
 export default {
@@ -28,6 +28,10 @@ export default {
       type: Array,
       required: true,
     },
+    loading: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -39,13 +43,38 @@ export default {
     chartData: {
       deep: true,
       handler(val) {
-        this.setOptions(val);
+        this.initChart();
       },
+    },
+    loading(val) {
+      console.log("loading", val);
+      if (!this.chart) {
+        this.chart = echarts.init(this.$el, "macarons");
+        return;
+      }
+      if (val) {
+        this.chart.showLoading({
+          text: "Loading...",
+          color: "#5470C6",
+          textColor: "#000",
+          maskColor: "rgba(255, 255, 255, 0.8)",
+          zlevel: 0,
+        });
+      } else {
+        this.chart.hideLoading();
+      }
     },
   },
   mounted() {
     this.$nextTick(() => {
       this.initChart();
+      this.chart.showLoading({
+        text: "Loading...",
+        color: "#5470C6",
+        textColor: "#000",
+        maskColor: "rgba(255, 255, 255, 0.8)",
+        zlevel: 0,
+      });
     });
     window.addEventListener("resize", this.debounceResize);
   },
@@ -60,7 +89,6 @@ export default {
   methods: {
     handleResize() {
       if (this.chart) {
-        this.chart.dispose();
         this.initChart();
       }
     },
@@ -71,6 +99,9 @@ export default {
       }, 500);
     },
     initChart() {
+      if (this.chart) {
+        this.chart.dispose();
+      }
       this.chart = echarts.init(this.$el, "macarons");
       this.setOptions(this.chartData);
     },
@@ -113,14 +144,10 @@ export default {
         series: [
           {
             name: "Question Count",
-            itemStyle: {
-              normal: {
-                color: "#FF005A",
-                lineStyle: {
-                  color: "#FF005A",
-                  width: 2,
-                },
-              },
+            itemStyle: { color: "#FF005A" },
+            lineStyle: {
+              color: "#FF005A",
+              width: 2,
             },
             smooth: true,
             type: "line",
@@ -132,14 +159,10 @@ export default {
             name: "Answer Count",
             smooth: true,
             type: "line",
-            itemStyle: {
-              normal: {
-                color: "#3888fa",
-                lineStyle: {
-                  color: "#3888fa",
-                  width: 2,
-                },
-              },
+            itemStyle: { color: "#3888fa" },
+            lineStyle: {
+              color: "#3888fa",
+              width: 2,
             },
             data: answerCountData,
             animationDuration: 2800,
@@ -149,14 +172,10 @@ export default {
             name: "Comment Count",
             smooth: true,
             type: "line",
-            itemStyle: {
-              normal: {
-                color: "#FF9F00",
-                lineStyle: {
-                  color: "#FF9F00",
-                  width: 2,
-                },
-              },
+            itemStyle: { color: "#FF9F00" },
+            lineStyle: {
+              color: "#FF9F00",
+              width: 2,
             },
             data: commentCountData,
             animationDuration: 2800,
