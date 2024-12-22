@@ -1,0 +1,58 @@
+version: '3.2'
+
+services:
+  # MySQL 服务
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=7NCx4_3gTuTj6nr
+      - TZ=Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/conf:/etc/mysql/conf.d
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - stackoverflow-java-analysis
+    restart: always
+
+  # 后端 Spring Boot 服务
+  backend:
+    image: openjdk:21-jdk-slim
+    container_name: backend
+    environment:
+      - TZ=Asia/Shanghai
+      - JAVA_OPTS=-Xmx512m
+      - SPRING_PROFILES_ACTIVE=prod
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend/stack-overflow-java-analysis-0.0.1-SNAPSHOT.jar:/app/backend.jar
+    networks:
+      - stackoverflow-java-analysis
+    depends_on:
+      - mysql
+    command: ["java", "-jar", "/app/backend.jar"]
+    restart: always
+
+  # Nginx 代理
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - ./frontend/html:/usr/share/nginx/html  # 将 Vue 构建后的 dist 文件挂载到 Nginx
+      - ./frontend/nginx.conf:/etc/nginx/nginx.conf  # 自定义 Nginx 配置文件
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - stackoverflow-java-analysis
+    depends_on:
+      - backend  # 确保 Nginx 在后端服务启动后再启动
+    restart: always
+
+networks:
+  stackoverflow-java-analysis:
+    driver: bridge
