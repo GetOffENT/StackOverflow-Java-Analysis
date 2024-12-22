@@ -68,13 +68,6 @@ export default {
   mounted() {
     this.$nextTick(() => {
       this.initChart();
-      this.chart.showLoading({
-        text: "Loading...",
-        color: "#5470C6",
-        textColor: "#000",
-        maskColor: "rgba(255, 255, 255, 0.8)",
-        zlevel: 0,
-      });
     });
     window.addEventListener("resize", this.debounceResize);
   },
@@ -103,6 +96,15 @@ export default {
         this.chart.dispose();
       }
       this.chart = echarts.init(this.$el, "macarons");
+      if (this.loading) {
+        this.chart.showLoading({
+          text: "Loading...",
+          color: "#5470C6",
+          textColor: "#000",
+          maskColor: "rgba(255, 255, 255, 0.8)",
+          zlevel: 0,
+        });
+      }
       this.setOptions(this.chartData);
     },
     setOptions(data) {
