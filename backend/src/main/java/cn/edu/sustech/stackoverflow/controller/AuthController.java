@@ -1,6 +1,7 @@
 package cn.edu.sustech.stackoverflow.controller;
 
 import cn.edu.sustech.stackoverflow.result.Result;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.Map;
 @RequestMapping("/auth")
 @Slf4j
 @Tag(name = "登录相关接口", description = "登录相关接口")
+@Hidden
 @RequiredArgsConstructor
 public class AuthController {
 
