@@ -35,23 +35,7 @@ export function getTopNErrorsAndExceptions(params) {
     url: "/analysis/error-and-exception/top",
     method: "get",
     params,
-  })
-}
-
-export function getFirstAnswersWithCreateDate(params) {
-  return request({
-    url: "/analysis/answer-quality/create-date/first",
-    method: "get",
-    params,
-  })
-}
-
-export function getAcceptedAnswersWithCreateDate(params) {
-  return request({
-    url: "/analysis/answer-quality/create-date/accepted",
-    method: "get",
-    params,
-  })
+  });
 }
 
 export function getAnswersWithCreateDate(params) {
@@ -59,7 +43,7 @@ export function getAnswersWithCreateDate(params) {
     url: "/analysis/answer-quality/create-date/all",
     method: "get",
     params,
-  })
+  });
 }
 
 export function getAnswersWithUserReputation(params) {
@@ -67,7 +51,7 @@ export function getAnswersWithUserReputation(params) {
     url: "/analysis/answer-quality/reputation",
     method: "get",
     params,
-  })
+  });
 }
 
 export function getAnswersWithLength(params) {
@@ -75,5 +59,5 @@ export function getAnswersWithLength(params) {
     url: "/analysis/answer-quality/length",
     method: "get",
     params,
-  })
+  });
 }

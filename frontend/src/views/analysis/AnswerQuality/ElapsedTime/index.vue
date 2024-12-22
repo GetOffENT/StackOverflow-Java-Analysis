@@ -99,11 +99,7 @@
 
 <script>
 import { highQualityFilter } from "../utils";
-import {
-  getFirstAnswersWithCreateDate,
-  getAcceptedAnswersWithCreateDate,
-  getAnswersWithCreateDate,
-} from "@/api/analysis";
+import { getAnswersWithCreateDate } from "@/api/analysis";
 import TimeLine from "@/components/TimeLine";
 import dayjs from "dayjs";
 import * as echarts from "echarts";
@@ -217,7 +213,7 @@ export default {
   components: {
     TimeLine,
   },
-  
+
   computed: {
     disabled() {
       return (
@@ -273,12 +269,14 @@ export default {
         MIN_GROUP_COUNT
       ) {
         groupSize = MIN_GROUP_SIZE;
-        groupCount = Math.ceil(this.displayedAllAnswerData.length / MIN_GROUP_SIZE);
+        groupCount = Math.ceil(
+          this.displayedAllAnswerData.length / MIN_GROUP_SIZE
+        );
       } else {
         groupCount = MIN_GROUP_COUNT;
         groupSize = Math.ceil(this.displayedAllAnswerData.length / groupCount);
       }
-      
+
       const groupedResults = [];
       for (let i = 0; i < groupCount; i++) {
         const groupStart = i * groupSize;
@@ -942,13 +940,11 @@ export default {
       }
       this.showLoading(this.pieChart1);
 
-      
       if (!this.pieChart2) {
         this.pieChart2 = echarts.init(this.$refs.pieChart2, "macarons");
       }
       this.showLoading(this.pieChart2);
 
-      
       if (!this.bottomChart) {
         this.bottomChart = echarts.init(this.$refs.bottomChart, "macarons");
       }
