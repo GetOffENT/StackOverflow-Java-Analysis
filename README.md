@@ -53,7 +53,6 @@
        key: <your-stack-exchange-key>
        save-to-json: <true-or-false> # 是否保存到json文件
        json-path: <your-json-path> # 如果保存到json文件，指定json文件绝对路径
-       save-to-database: <true-or-false> # 是否保存到数据库
        count: <your-count> # 使用api获取问题数据的数量   
    ```
 
