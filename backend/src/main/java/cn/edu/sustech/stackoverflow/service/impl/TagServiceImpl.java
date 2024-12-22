@@ -175,7 +175,8 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
         // 只取start和end的年份
         start = LocalDateTime.of(start.getYear(), 1, 1, 0, 0);
-        end = LocalDateTime.of(end.getYear(), 1, 1, 0, 0);
+        // 把end的hour设为1以便获取end对应年份的数据
+        end = LocalDateTime.of(end.getYear(), 1, 1, 1, 0);
 
         List<TopicVO> topicVOList = new ArrayList<>();
 
