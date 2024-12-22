@@ -50,6 +50,7 @@ public class AnalysisController {
         log.info("根据bug名获取对应bug数据 bugName:{}", bugName);
         return Result.success(analysisService.getBugByBugName(bugName));
     }
+
     /**
      * 获取数据概览
      *
@@ -177,54 +178,24 @@ public class AnalysisController {
     }
 
     /**
-     * 获取指定时间段内最先发布的回答信息及创建时间信息
-     *
-     * @param start 开始时间
-     * @param end   结束时间
-     * @return 最先发布的回答信息及创建时间信息
-     */
-    @GetMapping("/answer-quality/create-date/first")
-    @Operation(summary = "获取指定时间段内最先发布的回答信息及创建时间信息")
-    public Result<List<AnswerWithCreateDateVO>> getFirstAnswersWithCreateDate(
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
-    ) {
-        log.info("获取指定时间段内最先发布的回答信息及创建时间信息 start:{} end:{}", start, end);
-        return Result.success(analysisService.getFirstAnswersWithCreateDate(start, end));
-    }
-
-    /**
-     * 获取指定时间段内被接受的回答信息及创建时间信息
-     *
-     * @param start 开始时间
-     * @param end   结束时间
-     * @return 被接受的回答信息及创建时间信息
-     */
-    @GetMapping("/answer-quality/create-date/accepted")
-    @Operation(summary = "获取指定时间段内被接受的回答信息及创建时间信息")
-    public Result<List<AnswerWithCreateDateVO>> getAcceptedAnswersWithCreateDate(
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
-    ) {
-        log.info("获取指定时间段内被接受的回答信息及创建时间信息 start:{} end:{}", start, end);
-        return Result.success(analysisService.getAcceptedAnswersWithCreateDate(start, end));
-    }
-
-    /**
      * 获取指定时间段内回答信息及创建时间信息
      *
-     * @param start 开始时间
-     * @param end   结束时间
+     * @param start    开始时间
+     * @param end      结束时间
+     * @param accepted 是否只获取被接受的回答, 默认为false
+     * @param first    是否只获取最先发布的回答， 默认为false
      * @return 回答信息及创建时间信息
      */
     @GetMapping("/answer-quality/create-date/all")
     @Operation(summary = "获取指定时间段内回答信息及创建时间信息")
     public Result<List<AnswerWithCreateDateVO>> getAnswersWithCreateDate(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end,
+            @RequestParam(required = false, defaultValue = "false") Boolean accepted,
+            @RequestParam(required = false, defaultValue = "false") Boolean first
     ) {
-        log.info("获取指定时间段内回答信息及创建时间信息 start:{} end:{}", start, end);
-        return Result.success(analysisService.getAnswersWithCreateDate(start, end));
+        log.info("获取指定时间段内回答信息及创建时间信息 start:{} end:{} accepted:{} first:{}", start, end, accepted, first);
+        return Result.success(analysisService.getAnswersWithCreateDate(start, end, accepted, first));
     }
 
     /**

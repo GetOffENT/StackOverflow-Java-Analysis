@@ -74,7 +74,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     /**
      * 获取特定bug
      *
-     * @param bugName   bug名字
+     * @param bugName bug名字
      * @return 特定bug信息
      */
     @Override
@@ -417,47 +417,16 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     /**
-     * 获取指定时间段内最先发布的回答信息及创建时间信息
-     *
-     * @param start 开始时间
-     * @param end   结束时间
-     * @return 最先发布的回答信息及创建时间信息
-     */
-    @Override
-    public List<AnswerWithCreateDateVO> getFirstAnswersWithCreateDate(LocalDateTime start, LocalDateTime end) {
-        return getAnswersByCondition(true, false, start, end);
-    }
-
-    /**
-     * 获取指定时间段内被接受的回答信息及创建时间信息
-     *
-     * @param start 开始时间
-     * @param end   结束时间
-     * @return 被接受的回答信息及创建时间信息
-     */
-    @Override
-    public List<AnswerWithCreateDateVO> getAcceptedAnswersWithCreateDate(LocalDateTime start, LocalDateTime end) {
-        return getAnswersByCondition(false, true, start, end);
-    }
-
-    /**
      * 获取指定时间段内回答信息及创建时间信息
      *
-     * @param start 开始时间
-     * @param end   结束时间
+     * @param start    开始时间
+     * @param end      结束时间
+     * @param accepted 是否只获取被接受的回答, 默认为false
+     * @param first    是否只获取最先发布的回答， 默认为false
      * @return 回答信息及创建时间信息
      */
     @Override
-    public List<AnswerWithCreateDateVO> getAnswersWithCreateDate(LocalDateTime start, LocalDateTime end) {
-        long from = System.currentTimeMillis();
-
-        List<AnswerWithCreateDateVO> answersByCondition = getAnswersByCondition(false, false, start, end);
-
-        log.info("time cost: {}s", (System.currentTimeMillis() - from) / 1000.0);
-        return answersByCondition;
-    }
-
-    public List<AnswerWithCreateDateVO> getAnswersByCondition(boolean first, boolean accepted, LocalDateTime start, LocalDateTime end) {
+    public List<AnswerWithCreateDateVO> getAnswersWithCreateDate(LocalDateTime start, LocalDateTime end, Boolean accepted, Boolean first) {
         // 查询符合时间范围的所有回答
         List<Answer> answers = answerMapper.selectList(
                 new LambdaQueryWrapper<Answer>()

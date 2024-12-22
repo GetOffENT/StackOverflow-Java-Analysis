@@ -5,7 +5,6 @@ import cn.edu.sustech.stackoverflow.entity.vo.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
  * <p>
@@ -19,7 +18,7 @@ public interface AnalysisService {
     /**
      * 获取特定bug
      *
-     * @param bugName   bug名字
+     * @param bugName bug名字
      * @return 特定bug信息
      */
     Object getBugByBugName(String bugName);
@@ -50,32 +49,15 @@ public interface AnalysisService {
     List<TopicByEngagementVO> getTopNTopicsByEngagementOfUserWithHigherReputation(TopicByEngagementQueryDTO topicByEngagementQueryDTO);
 
     /**
-     * 获取指定时间段内最先发布的回答信息及创建时间信息
-     *
-     * @param start 开始时间
-     * @param end   结束时间
-     * @return 最先发布的回答信息及创建时间信息
-     */
-    List<AnswerWithCreateDateVO> getFirstAnswersWithCreateDate(LocalDateTime start, LocalDateTime end);
-
-    /**
-     * 获取指定时间段内被接受的回答信息及创建时间信息
-     *
-     * @param start 开始时间
-     * @param end   结束时间
-     * @return 被接受的回答信息及创建时间信息
-     */
-    List<AnswerWithCreateDateVO> getAcceptedAnswersWithCreateDate(LocalDateTime start, LocalDateTime end);
-
-
-    /**
      * 获取指定时间段内回答信息及创建时间信息
      *
-     * @param start 开始时间
-     * @param end   结束时间
+     * @param start    开始时间
+     * @param end      结束时间
+     * @param accepted 是否只获取被接受的回答, 默认为false
+     * @param first    是否只获取最先发布的回答， 默认为false
      * @return 回答信息及创建时间信息
      */
-    List<AnswerWithCreateDateVO> getAnswersWithCreateDate(LocalDateTime start, LocalDateTime end);
+    List<AnswerWithCreateDateVO> getAnswersWithCreateDate(LocalDateTime start, LocalDateTime end, Boolean accepted, Boolean first);
 
     /**
      * 获取指定时间段内回答信息及回答用户声望
