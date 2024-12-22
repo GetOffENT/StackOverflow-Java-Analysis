@@ -33,7 +33,7 @@
     </div>
     <div class="bottom-chart-contaniner">
       <h3 style="justify-self: center; color: #606266">
-        Scatter Plot of Answer Data: Upvotes vs Duration
+        {{ this.chartTitle }}
       </h3>
       <div style="justify-self: right; margin-right: 150px">
         <span class="define-span" @click="dialogVisible = true"
@@ -139,7 +139,7 @@ export default {
       filter: {
         upVoteCount: 5,
         downVoteCount: 100000,
-        orAccepted: false,
+        orAccepted: true,
         isAccepted: true,
       },
       buttonText: "details",
@@ -215,6 +215,7 @@ export default {
   components: {
     TimeLine,
   },
+  
   computed: {
     disabled() {
       return (
@@ -222,6 +223,11 @@ export default {
         this.loadingFirstAnswer ||
         this.loadingAllAnswer
       );
+    },
+    chartTitle() {
+      return this.buttonText === "details"
+        ? "Scatter Plot with Regression Line: High-quality Rate vs Elapsed Time"
+        : "Scatter Plot of Answer Data: Upvotes vs Elapsed Time";
     },
   },
   mounted() {
@@ -249,86 +255,6 @@ export default {
         this.buttonText = "details";
         this.initLineChart();
       }
-    },
-    filterLineData1() {
-      // 把displayedAllAnswerData按照bins(duration方向)分组, count计数, xAxis为从bins[1]开始到bins[length-1]
-      const bins = [
-        "0m",
-        "10m",
-        "1h",
-        "5h",
-        "1d",
-        "10d",
-        "100d",
-        "1y",
-        "2y",
-        "5y",
-        "10000d",
-      ];
-      const binsByMs = bins.map(
-        // 转化为ms
-        (item) => {
-          if (item.endsWith("m")) {
-            return parseInt(item) * 60 * 1000;
-          } else if (item.endsWith("h")) {
-            return parseInt(item) * 60 * 60 * 1000;
-          } else if (item.endsWith("d")) {
-            return parseInt(item) * 24 * 60 * 60 * 1000;
-          } else if (item.endsWith("y")) {
-            return parseInt(item) * 365 * 24 * 60 * 60 * 1000;
-          }
-        }
-      );
-      this.lineData = binsByMs
-        .map((bin, index) => {
-          if (index !== 0) {
-            let highQualityCount = 0,
-              nonHighQualityCount = 0;
-            for (let i = 0; i < this.displayedAllAnswerData.length; i++) {
-              const item = this.displayedAllAnswerData[i];
-              if (item.duration > binsByMs[index - 1] && item.duration <= bin) {
-                let highQualityFlag = false;
-                if (this.filter.orAccepted && this.filter.isAccepted) {
-                  if (item.isAccepted) {
-                    highQualityFlag = true;
-                  } else {
-                    highQualityFlag =
-                      this.filter.upVoteCount <= item.upVoteCount &&
-                      item.downVoteCount <= this.filter.downVoteCount;
-                  }
-                } else {
-                  highQualityFlag =
-                    this.filter.upVoteCount <= item.upVoteCount &&
-                    item.downVoteCount <= this.filter.downVoteCount &&
-                    (this.filter.isAccepted ? item.isAccepted : true);
-                }
-                if (highQualityFlag) {
-                  highQualityCount += 1;
-                } else {
-                  nonHighQualityCount += 1;
-                }
-              }
-            }
-            // 带单位的区间(如0-10m, 10m-1h)，单位相同则只有后一个显示单位
-            if (index === bins.length - 1) {
-              return {
-                xAxis: `${bins[index - 1]}+`,
-                highQualityCount,
-                nonHighQualityCount,
-              };
-            }
-            const xAxis =
-              bins[index - 1].slice(-1) === bins[index].slice(-1)
-                ? `${bins[index - 1].slice(0, -1)}-${bins[index]}`
-                : `${bins[index - 1]}-${bins[index]}`;
-            return {
-              xAxis,
-              highQualityCount,
-              nonHighQualityCount,
-            };
-          }
-        })
-        .slice(1);
     },
     filterLineData() {
       // 把displayedAllAnswerData分为按照durantion从小到大分为N组聚合，统计每组的高质量率
@@ -511,11 +437,6 @@ export default {
         },
         legend: {
           data: ["High-quality Rate", "Accepted Rate", "First Rate"],
-          selected: {
-            "High-quality Rate": true,
-            "Accepted Rate": false,
-            "First Rate": false,
-          },
         },
         xAxis: {
           type: "category", // 分类型 x 轴
@@ -643,7 +564,9 @@ export default {
         },
         xAxis: {
           type: "log", // 对数坐标轴
-          name: "Duration (days)",
+          name: "Elapsed Time (days)",
+          nameGap: 30,
+          nameLocation: "middle",
           scale: true,
           min: 1,
         },

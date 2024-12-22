@@ -10,7 +10,7 @@
     />
     <div class="scatter-chart">
       <h3 style="justify-self: center; color: #606266">
-        Scatter Plot of Answer Data: Upvotes vs Answer Length
+        {{ this.chartTitle }}
       </h3>
       <div style="justify-self: right; margin-right: 150px">
         <span class="define-span" @click="dialogVisible = true"
@@ -74,10 +74,12 @@
 </template>
 
 <script>
+import { highQualityFilter } from "../utils";
 import { getAnswersWithLength } from "@/api/analysis";
 import TimeLine from "@/components/TimeLine";
 import dayjs from "dayjs";
 import * as echarts from "echarts";
+import * as ecStat from "echarts-stat";
 require("echarts/theme/macarons");
 
 export default {
@@ -133,6 +135,13 @@ export default {
       deep: true,
     },
   },
+  computed: {
+    chartTitle() {
+      return this.buttonText === "details"
+        ? "Scatter Plot with Regression Line: High-quality Rate vs Answer Length"
+        : "Scatter Plot of Answer Data: Upvotes vs User Answer Length";
+    },
+  },
   mounted() {
     this.fetchData();
     window.addEventListener("resize", this.debounceResize);
@@ -160,54 +169,50 @@ export default {
       }
     },
     filterLineData() {
-      // 把displayedData按照bins(length方向)分组, count计数, xAxis为从bins[1]开始到bins[length-1]
-      const bins = [0, 10, 100, 1000, 10000, 100000, 1000000, 10000000];
-      this.lineData = bins
-        .map((bin, index) => {
-          if (index !== 0) {
-            let highQualityCount = 0,
-              nonHighQualityCount = 0;
-            for (let i = 0; i < this.displayedData.length; i++) {
-              const item = this.displayedData[i];
-              if (item.length > bins[index - 1] && item.length <= bin) {
-                let highQualityFlag = false;
-                if (this.filter.orAccepted && this.filter.isAccepted) {
-                  if (item.isAccepted) {
-                    highQualityFlag = true;
-                  } else {
-                    highQualityFlag =
-                      this.filter.upVoteCount <= item.upVoteCount &&
-                      item.downVoteCount <= this.filter.downVoteCount;
-                  }
-                } else {
-                  highQualityFlag =
-                    this.filter.upVoteCount <= item.upVoteCount &&
-                    item.downVoteCount <= this.filter.downVoteCount &&
-                    (this.filter.isAccepted ? item.isAccepted : true);
-                }
-                if (highQualityFlag) {
-                  highQualityCount += 1;
-                } else {
-                  nonHighQualityCount += 1;
-                }
-              }
-            }
-            if (index === bins.length - 1) {
-              return {
-                xAxis: `${bins[index - 1]}+`,
-                highQualityCount,
-                nonHighQualityCount,
-              };
-            }
-            return {
-              xAxis: `${bins[index - 1]}-${bins[index]}`,
-              highQualityCount,
-              nonHighQualityCount,
-            };
-          }
-        })
-        .slice(1);
-      console.log(this.lineData);
+      // 把displayedData分为按照length从小到大分为N组聚合，统计每组的高质量率
+      const N = 100;
+      const groupSize = Math.ceil(this.displayedData.length / N);
+      const groupedResults = [];
+      for (let i = 0; i < N; i++) {
+        const groupStart = i * groupSize;
+        const groupEnd = Math.min(
+          groupStart + groupSize,
+          this.displayedData.length
+        );
+        const group = this.displayedData.slice(groupStart, groupEnd);
+
+        // 统计高质量的比例
+        const highQualityCount = group.filter((item) =>
+          highQualityFilter(item, this.filter)
+        ).length;
+        const highQualityRate = group.length
+          ? highQualityCount / group.length
+          : 0;
+        // 统计改组平均upvote和downvote
+        const upVoteCount =
+          group.reduce((acc, item) => acc + item.upVoteCount, 0) / group.length;
+        const downVoteCount =
+          group.reduce((acc, item) => acc + item.downVoteCount, 0) /
+          group.length;
+
+        // 统计Accepted的比例
+        const acceptedRate = group.length
+          ? group.filter((item) => item.isAccepted).length / group.length
+          : 0;
+
+        // 获取该组的最大 length
+        const xAxis = group[group.length - 1]?.length || 0;
+
+        groupedResults.push({
+          highQualityRate,
+          xAxis: xAxis,
+          upVoteCount,
+          downVoteCount,
+          acceptedRate,
+        });
+      }
+
+      this.lineData = JSON.parse(JSON.stringify(groupedResults));
     },
     handleResize() {
       if (this.buttonText === "back") {
@@ -267,62 +272,97 @@ export default {
       }
       this.chart = echarts.init(this.$refs.chart, "macarons");
 
+      const regression = ecStat.regression(
+        "logarithmic",
+        this.lineData.map((item) => [
+          parseFloat(item.xAxis),
+          item.highQualityRate * 100,
+        ])
+      );
+
+      const accRegression = ecStat.regression(
+        "logarithmic",
+        this.lineData.map((item) => [
+          parseFloat(item.xAxis),
+          item.acceptedRate * 100,
+        ])
+      );
+
       this.chart.setOption({
-        xAxis: {
-          name: "Answer Length (characters)",
-          type: "category",
-          boundaryGap: false,
-          data: this.lineData.map((item) => item.xAxis),
-          axisTick: {
-            show: false,
-          },
-        },
         tooltip: {
-          trigger: "axis",
+          trigger: "item",
           axisPointer: {
             type: "cross",
           },
-          padding: [5, 10],
-        },
-        yAxis: {
-          name: "Answer Count",
-          axisTick: {
-            show: false,
-          },
         },
         legend: {
-          data: ["High-quality", "Non-high-quality"],
+          data: ["High-quality Rate", "Accepted Rate"],
+        },
+        xAxis: {
+          type: "category", // 分类型 x 轴
+          name: "Answer Length (characters)",
+          nameLocation: "middle",
+          nameGap: 30,
+          data: this.lineData.map((item) => item.xAxis), // 设置分类
+        },
+        yAxis: {
+          type: "value",
+          name: "Rate (%)",
+          nameLocation: "middle",
+          nameGap: 50,
         },
         series: [
           {
-            name: "High-quality",
-            type: "line",
-            data: this.lineData.map((item) => item.highQualityCount),
-            itemStyle: {
-              normal: {
-                color: "#FF005A",
-                lineStyle: {
-                  color: "#FF005A",
-                  width: 2,
-                },
+            name: "Scatter",
+            type: "scatter",
+            data: (() => {
+              return this.lineData.map((item) => ({
+                value: [item.xAxis.toString(), item.highQualityRate * 100],
+                itemStyle: { color: "#2ec7c9" },
+                symbolSize: 7,
+                ...item,
+              }));
+            })(),
+            tooltip: {
+              formatter: (params) => {
+                const data = params.data;
+                return `
+                Answer Length: ${data.value[0]} s <br/>
+                High Quality Rate: ${data.value[1].toFixed(2)}% <br/>
+                Accepted Rate: ${data.acceptedRate.toFixed(2)} <br/>
+                Average Upvote: ${data.upVoteCount.toFixed(2)} <br/>
+                Average Downvote: ${data.downVoteCount.toFixed(2)} <br/>
+                `;
               },
+            },
+          },
+          {
+            name: "High-quality Rate",
+            type: "line",
+            showSymbol: false,
+            data: regression.points.map((item) => [
+              item[0].toString(),
+              item[1],
+            ]),
+            lineStyle: {
+              color: "#b6a2de",
+              width: 3,
             },
             smooth: true,
             animationDuration: 2800,
             animationEasing: "cubicInOut",
           },
           {
-            name: "Non-high-quality",
+            name: "Accepted Rate",
             type: "line",
-            data: this.lineData.map((item) => item.nonHighQualityCount),
-            itemStyle: {
-              normal: {
-                color: "#3888fa",
-                lineStyle: {
-                  color: "#3888fa",
-                  width: 2,
-                },
-              },
+            showSymbol: false,
+            data: accRegression.points.map((item) => [
+              item[0].toString(),
+              item[1],
+            ]),
+            lineStyle: {
+              color: "#5ab1ef",
+              width: 3,
             },
             smooth: true,
             animationDuration: 2800,
@@ -508,10 +548,9 @@ export default {
               );
 
               const average = {
-                length: (
-                  (total.length / filteredData.length) *
-                  10000
-                ).toFixed(2),
+                length: ((total.length / filteredData.length) * 10000).toFixed(
+                  2
+                ),
                 upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
                   2
                 ),
@@ -566,10 +605,9 @@ export default {
               );
 
               const average = {
-                length: (
-                  (total.length / filteredData.length) *
-                  10000
-                ).toFixed(2),
+                length: ((total.length / filteredData.length) * 10000).toFixed(
+                  2
+                ),
                 upVoteCount: (total.upVoteCount / filteredData.length).toFixed(
                   2
                 ),
@@ -580,7 +618,10 @@ export default {
 
               return [
                 {
-                  value: [average.length, average.upVoteCount < 1 ? 1 : average.upVoteCount],
+                  value: [
+                    average.length,
+                    average.upVoteCount < 1 ? 1 : average.upVoteCount,
+                  ],
                   itemStyle: { color: "#d87a80" },
                   symbolSize: 50,
                   name: "Average",
@@ -589,7 +630,7 @@ export default {
                 },
               ];
             })(),
-          }
+          },
         ],
       });
     },
