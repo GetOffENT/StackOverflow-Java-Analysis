@@ -169,11 +169,29 @@ export default {
       }
     },
     filterLineData() {
-      // 把displayedData分为按照length从小到大分为N组聚合，统计每组的高质量率
-      const N = 100;
-      const groupSize = Math.ceil(this.displayedData.length / N);
+      const MIN_GROUP_SIZE = 100; // 每组最小数量
+      const MIN_GROUP_COUNT = 5; // 最小组数
+      const N = 100; // 初始目标组数
+
+      let groupSize, groupCount;
+
+      // 把displayedData分为按照length从小到大分为groupCount组聚合，统计每组的高质量率
+      if (this.displayedData.length / N >= MIN_GROUP_SIZE) {
+        groupSize = Math.ceil(this.displayedData.length / N);
+        groupCount = N;
+      } else if (
+        this.displayedData.length / MIN_GROUP_SIZE >=
+        MIN_GROUP_COUNT
+      ) {
+        groupSize = MIN_GROUP_SIZE;
+        groupCount = Math.ceil(this.displayedData.length / MIN_GROUP_SIZE);
+      } else {
+        groupCount = MIN_GROUP_COUNT;
+        groupSize = Math.ceil(this.displayedData.length / groupCount);
+      }
+      
       const groupedResults = [];
-      for (let i = 0; i < N; i++) {
+      for (let i = 0; i < groupCount; i++) {
         const groupStart = i * groupSize;
         const groupEnd = Math.min(
           groupStart + groupSize,

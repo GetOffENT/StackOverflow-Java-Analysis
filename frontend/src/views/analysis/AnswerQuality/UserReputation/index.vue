@@ -171,11 +171,29 @@ export default {
     },
 
     filterLineData() {
+      const MIN_GROUP_SIZE = 100; // 每组最小数量
+      const MIN_GROUP_COUNT = 5; // 最小组数
+      const N = 100; // 初始目标组数
+
+      let groupSize, groupCount;
+
       // 把displayedData分为按照reputation从小到大分为N组聚合，统计每组的高质量率
-      const N = 100;
-      const groupSize = Math.ceil(this.displayedData.length / N);
+      if (this.displayedData.length / N >= MIN_GROUP_SIZE) {
+        groupSize = Math.ceil(this.displayedData.length / N);
+        groupCount = N;
+      } else if (
+        this.displayedData.length / MIN_GROUP_SIZE >=
+        MIN_GROUP_COUNT
+      ) {
+        groupSize = MIN_GROUP_SIZE;
+        groupCount = Math.ceil(this.displayedData.length / MIN_GROUP_SIZE);
+      } else {
+        groupCount = MIN_GROUP_COUNT;
+        groupSize = Math.ceil(this.displayedData.length / groupCount);
+      }
+      
       const groupedResults = [];
-      for (let i = 0; i < N; i++) {
+      for (let i = 0; i < groupCount; i++) {
         const groupStart = i * groupSize;
         const groupEnd = Math.min(
           groupStart + groupSize,
@@ -304,7 +322,7 @@ export default {
         },
         xAxis: {
           type: "category", // 分类型 x 轴
-          name: "Reputation",
+          name: "User Reputation",
           nameLocation: "middle",
           nameGap: 30,
           data: this.lineData.map((item) => item.xAxis), // 设置分类
