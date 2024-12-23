@@ -16,6 +16,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CacheableRedis {
-    // 缓存过期时间（默认30分钟）
-    int expire() default 30;
+    int expire() default 120;
 }
