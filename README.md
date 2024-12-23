@@ -20,14 +20,38 @@
 
 ## 技术栈
 
-- **前端**：Vue
-- **后端**：Spring Boot + MybatisPlus + MySQL
+- **前端**：Vue + Vue-CLI + Element-UI + Vue Router + Axios + Echarts + d3
+- **后端**：Spring Boot + MybatisPlus + MySQL + Knife4J + OKHttp
+
+## 项目展示
+
+词云图
+
+<img src="assets/wordcloud.png" style="zoom:50%;" />
 
 ## 快速开始
+
+### 前端
+
+```bash
+# 进入前端项目目录
+cd frontend
+
+# 安装依赖
+npm install
+
+# 另
+npm install --registry=https://registry.npmmirror.com
+
+# 本地开发
+npm run dev
+```
 
 ### MySQL数据库
 
 [获取](sql/table.sql)建表语句，创建数据库和表。
+
+> 如果不想自己抓取数据，可以直接获取带数据的建表[sql](sql/table_with_data.sql)
 
 ### 后端
 
@@ -57,3 +81,33 @@
    ```
 
 3. 运行 `test`下`cn.edu.sustech.stackoverflow.CrawlerTest` 类，自动获取数据并根据配置信息存储到数据库（和json文件）中。
+
+4. 运行项目即可
+
+## 部署
+
+使用 [Docker Compose](https://docs.docker.com/compose) 能够十分方便地部署本项目，步骤如下：
+
+1. **构建后端**
+
+   进入`/backend`文件夹，使用Maven将后端打成Jar包: `mvn package -D mvn.test.skip=true`。或者使用IDEA自带的Maven插件打Jar包，步骤如图。之后将Jar包移动到`/deploy/backend`文件夹内
+
+### <img src="assets/1.png" alt="mvn" style="zoom: 67%;" />
+
+2. **构建前端**
+
+   i. 参考[官方文档](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs)安装Node.js，推荐使用v20.12.0
+
+   ii. 进入`/frontend`文件夹，运行`npm install`安装依赖，然后运行`npm run build:prod`构建静态文件，将会生成`/dist`文件夹
+
+   iii. 将`/dist`中的文件移动到`/frontend/html`文件夹内
+
+3. 部署
+
+   i. 在服务器上参考[官方文档](https://docs.docker.com/engine/install/)安装Docker环境
+
+   ii. 将`/deploy`整个文件夹上传到服务器
+
+   iii. 进入`/deploy`文件夹，运行`docker compose up -d`即可一键部署
+
+   iv. 浏览器访问项目：`http://<服务器ip地址>`
