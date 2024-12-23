@@ -55,10 +55,6 @@
 
 <img src="assets/scatter.png" alt=" " />
 
-## 项目结构
-
-
-
 ## 快速开始
 
 ### 前端
@@ -122,7 +118,7 @@ npm run dev
 
    进入`/backend`文件夹，使用Maven将后端打成Jar包: `mvn package -D mvn.test.skip=true`。或者使用IDEA自带的Maven插件打Jar包，步骤如图。之后将Jar包移动到`/deploy/backend`文件夹内
 
-### <img src="assets/1.png" alt="mvn" style="zoom: 67%;" />
+### <img src="assets/package.png" alt="mvn" style="zoom: 67%;" />
 
 2. **构建前端**
 
