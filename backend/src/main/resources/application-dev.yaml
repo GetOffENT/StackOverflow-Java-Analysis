@@ -12,3 +12,6 @@ stack-overflow:
     save-to-json: false
     json-path: E:\courses\CS209A-ComputerSystemDesignAndApplicationsA\project\StackOverflow-Java-Analysis\backend\src\main\resources\data\questions.json
     count: 1000
+logging:
+  level:
+    cn.edu.sustech.stackoverflow: debug

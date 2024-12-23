@@ -5,3 +5,6 @@ stack-overflow:
     database: stackoverflow
     username: root
     password: 7NCx4_3gTuTj6nr
+logging:
+  level:
+    cn.edu.sustech.stackoverflow: info
