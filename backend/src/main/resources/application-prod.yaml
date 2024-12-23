@@ -5,6 +5,11 @@ stack-overflow:
     database: stackoverflow
     username: root
     password: 7NCx4_3gTuTj6nr
+  redis:
+    host: redis
+    port: 6379
+    database: 1
+    password: redis
 logging:
   level:
     cn.edu.sustech.stackoverflow: info

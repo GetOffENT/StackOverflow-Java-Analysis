@@ -9,6 +9,12 @@ spring:
     url: jdbc:mysql://${stack-overflow.database.host:localhost}:${stack-overflow.database.port:3306}/${stack-overflow.database.database:stackoverflow}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
     username: ${stack-overflow.database.username:root}
     password: ${stack-overflow.database.password:mysql}
+  data:
+    redis:
+      host: ${stack-overflow.redis.host:localhost}
+      port: ${stack-overflow.redis.port:6379}
+      database: ${stack-overflow.redis.database:0}
+      password: ${stack-overflow.redis.password:redis}
 
 springdoc:
   swagger-ui:
