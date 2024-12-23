@@ -186,7 +186,7 @@ public class AnalysisController {
      * @param first    是否只获取最先发布的回答， 默认为false
      * @return 回答信息及创建时间信息
      */
-    @GetMapping("/answer-quality/create-date/all")
+    @GetMapping("/answer-quality/create-date")
     @Operation(summary = "获取指定时间段内回答信息及创建时间信息")
     public Result<List<AnswerWithCreateDateVO>> getAnswersWithCreateDate(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,

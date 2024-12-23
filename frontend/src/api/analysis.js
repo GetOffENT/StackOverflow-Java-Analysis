@@ -40,7 +40,7 @@ export function getTopNErrorsAndExceptions(params) {
 
 export function getAnswersWithCreateDate(params) {
   return request({
-    url: "/analysis/answer-quality/create-date/all",
+    url: "/analysis/answer-quality/create-date",
     method: "get",
     params,
   });
