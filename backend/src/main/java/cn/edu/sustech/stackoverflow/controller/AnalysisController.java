@@ -1,5 +1,6 @@
 package cn.edu.sustech.stackoverflow.controller;
 
+import cn.edu.sustech.stackoverflow.annotation.CacheableRedis;
 import cn.edu.sustech.stackoverflow.entity.dto.TopicByEngagementQueryDTO;
 import cn.edu.sustech.stackoverflow.entity.vo.*;
 import cn.edu.sustech.stackoverflow.result.Result;
@@ -46,6 +47,7 @@ public class AnalysisController {
      */
     @GetMapping("/error-and-exception")
     @Operation(summary = "根据bug名获取对应bug数据")
+    @CacheableRedis
     public Result<Object> getBugByBugName(@RequestParam String bugName) {
         log.info("根据bug名获取对应bug数据 bugName:{}", bugName);
         return Result.success(analysisService.getBugByBugName(bugName));
@@ -58,6 +60,7 @@ public class AnalysisController {
      */
     @GetMapping("/overview")
     @Operation(summary = "获取数据概览")
+    @CacheableRedis
     public Result<OverviewVO> getOverview() {
         log.info("获取数据概览");
         return Result.success(analysisService.getOverview());
@@ -70,6 +73,7 @@ public class AnalysisController {
      */
     @GetMapping("/overview/2")
     @Operation(summary = "获取question、answer、comment、user每个月新产生的数量")
+    @CacheableRedis
     public Result<List<CountInSingleMonthVO>> getCountInSingleMonth(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
@@ -85,6 +89,7 @@ public class AnalysisController {
      */
     @GetMapping("/date-range")
     @Operation(summary = "获取所有数据的时间范围")
+    @CacheableRedis
     public Result<DateRangeVO> getDateRange() {
         log.info("获取所有数据的时间范围");
         return Result.success(analysisService.getDateRange());
@@ -98,6 +103,7 @@ public class AnalysisController {
      */
     @GetMapping("/topic")
     @Operation(summary = "根据标签名获取对应标签数据")
+    @CacheableRedis
     public Result<TopicVO> getTopicByTagName(@RequestParam String tagName) {
         log.info("根据标签名获取对应标签数据 tagName:{}", tagName);
         return Result.success(tagService.getTopicByTagName(tagName));
@@ -113,6 +119,7 @@ public class AnalysisController {
      */
     @GetMapping("/topic/top")
     @Operation(summary = "获取前n个热门标签")
+    @CacheableRedis
     public Result<List<TopicVO>> getTopNTags(
             @RequestParam Integer n,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
@@ -132,6 +139,7 @@ public class AnalysisController {
      */
     @GetMapping("/topic/race")
     @Operation(summary = "获取指定时间段内race chart数据(一年一次)")
+    @CacheableRedis
     public Result<List<TopicVO>> getRaceChartData(
             @RequestParam Integer n,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
@@ -150,6 +158,7 @@ public class AnalysisController {
      */
     @GetMapping("/topic/engagement/top")
     @Operation(summary = "获取指定时间段内用户声望高的用户参与度最高的n个话题")
+    @CacheableRedis
     public Result<List<TopicByEngagementVO>> getTopNTopicsByEngagementOfUserWithHigherReputation(
             @ParameterObject TopicByEngagementQueryDTO topicByEngagementQueryDTO
     ) {
@@ -167,6 +176,7 @@ public class AnalysisController {
      */
     @GetMapping("/error-and-exception/top")
     @Operation(summary = "获取前n个被高频讨论的错误和异常", description = "获取前n个被高频讨论的错误和异常")
+    @CacheableRedis
     public Result<Object> getTopNErrorsAndExceptions(
             @RequestParam Integer n,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
@@ -188,6 +198,7 @@ public class AnalysisController {
      */
     @GetMapping("/answer-quality/create-date/all")
     @Operation(summary = "获取指定时间段内回答信息及创建时间信息")
+    @CacheableRedis
     public Result<List<AnswerWithCreateDateVO>> getAnswersWithCreateDate(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end,
@@ -207,6 +218,7 @@ public class AnalysisController {
      */
     @GetMapping("/answer-quality/reputation")
     @Operation(summary = "获取指定时间段内回答简略信息及回答用户声望")
+    @CacheableRedis
     public Result<List<AnswerWithUserReputationVO>> getAnswersWithUserReputation(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end
@@ -224,6 +236,7 @@ public class AnalysisController {
      */
     @GetMapping("/answer-quality/length")
     @Operation(summary = "获取指定时间段内回答简略信息及答案长度信息")
+    @CacheableRedis
     public Result<List<AnswerWithLengthVO>> getAnswersWithLength(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime end

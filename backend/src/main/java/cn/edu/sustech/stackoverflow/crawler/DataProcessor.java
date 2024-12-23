@@ -2,6 +2,7 @@ package cn.edu.sustech.stackoverflow.crawler;
 
 import cn.edu.sustech.stackoverflow.entity.*;
 import cn.edu.sustech.stackoverflow.mapper.*;
+import cn.edu.sustech.stackoverflow.util.RedisCacheUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -39,6 +40,8 @@ public class DataProcessor {
 
     private final CommentMapper commentMapper;
 
+    private final RedisCacheUtil redisCacheUtil;
+
     /**
      * 初始化数据库
      */
@@ -63,6 +66,9 @@ public class DataProcessor {
         log.info("清空comment表...");
         commentMapper.delete(null);
         log.info("数据库初始化完成");
+
+        log.info("清空redis缓存...");
+        redisCacheUtil.clearAll();
     }
 
     /**
