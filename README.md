@@ -27,7 +27,37 @@
 
 词云图
 
-<img src="assets/wordcloud.png" style="zoom:50%;" />
+<img src="assets/wordcloud.png" alt=" " style="zoom:50%;" />
+
+横向柱状图
+
+<img src="assets/bar.png" alt=" "/>
+
+赛跑图(Race Chart)
+
+<img src="assets/race2012.png" alt=" " />
+
+<img src="assets/race2022.png" alt=" " />
+
+复杂柱状图
+
+<img src="assets/bar2.png" alt=" "/>
+
+饼图
+
+<img src="assets/pie.png" alt=" " />
+
+回归曲线
+
+<img src="assets/line.png" alt=" " />
+
+散点图
+
+<img src="assets/scatter.png" alt=" " />
+
+## 项目结构
+
+
 
 ## 快速开始
 
@@ -40,7 +70,7 @@ cd frontend
 # 安装依赖
 npm install
 
-# 另
+# 或切换镜像
 npm install --registry=https://registry.npmmirror.com
 
 # 本地开发
