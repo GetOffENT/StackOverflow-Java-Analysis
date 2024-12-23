@@ -18,6 +18,25 @@ services:
       - stackoverflow-java-analysis
     restart: always
 
+  # Redis 服务
+  redis:
+    image: redis:7
+    container_name: redis
+    command: ["redis-server", "/etc/redis/redis.conf"]
+    volumes:
+      - ./redis/conf/redis.conf:/etc/redis/redis.conf
+      - ./redis/data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - stackoverflow-java-analysis
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "2"
+    restart: always
+
   # 后端 Spring Boot 服务
   backend:
     image: openjdk:21-jdk-slim
@@ -34,6 +53,7 @@ services:
       - stackoverflow-java-analysis
     depends_on:
       - mysql
+      - redis
     command: ["java", "-jar", "/app/backend.jar"]
     restart: always
 
