@@ -97,6 +97,7 @@ export default {
       answerWithUserReputationData: [],
       displayedData: [],
       displayedLineData: [],
+      groupSize: 100,
       chart: null,
       resizeTimeout: null,
       disabled: false,
@@ -191,7 +192,8 @@ export default {
         groupCount = MIN_GROUP_COUNT;
         groupSize = Math.ceil(this.displayedData.length / groupCount);
       }
-      
+      this.groupSize = groupSize;
+
       const groupedResults = [];
       for (let i = 0; i < groupCount; i++) {
         const groupStart = i * groupSize;
@@ -220,8 +222,8 @@ export default {
           ? group.filter((item) => item.isAccepted).length / group.length
           : 0;
 
-        // 获取该组的最大 reputation
-        const xAxis = group[group.length - 1]?.reputation || 0;
+        // 获取该组的平均 reputation
+        const xAxis = group.reduce((acc, item) => acc + item.reputation, 0) / group.length;
 
         groupedResults.push({
           highQualityRate,
@@ -322,10 +324,10 @@ export default {
         },
         xAxis: {
           type: "category", // 分类型 x 轴
-          name: "User Reputation",
+          name: `User Reputation\n${this.lineData.length} groups, ${this.groupSize} samples per group`,
           nameLocation: "middle",
           nameGap: 30,
-          data: this.lineData.map((item) => item.xAxis), // 设置分类
+          data: this.lineData.map((item) => item.xAxis.toFixed(2)), // 设置分类
         },
         yAxis: {
           type: "value",
@@ -339,7 +341,7 @@ export default {
             type: "scatter",
             data: (() => {
               return this.lineData.map((item) => ({
-                value: [item.xAxis.toString(), item.highQualityRate * 100],
+                value: [item.xAxis.toFixed(2).toString(), item.highQualityRate * 100],
                 itemStyle: { color: "#2ec7c9" },
                 symbolSize: 7,
                 ...item,
@@ -349,7 +351,7 @@ export default {
               formatter: (params) => {
                 const data = params.data;
                 return `
-                Reputation: ${data.value[0]} s <br/>
+                Reputation: ${data.value[0]} <br/>
                 High Quality Rate: ${data.value[1].toFixed(2)}% <br/>
                 Accepted Rate: ${data.acceptedRate.toFixed(2)} <br/>
                 Average Upvote: ${data.upVoteCount.toFixed(2)} <br/>
@@ -363,7 +365,7 @@ export default {
             type: "line",
             showSymbol: false,
             data: regression.points.map((item) => [
-              item[0].toString(),
+              item[0].toFixed(2).toString(),
               item[1],
             ]),
             lineStyle: {
@@ -379,7 +381,7 @@ export default {
             type: "line",
             showSymbol: false,
             data: accRegression.points.map((item) => [
-              item[0].toString(),
+              item[0].toFixed(2).toString(),
               item[1],
             ]),
             lineStyle: {

@@ -77,6 +77,7 @@
 import { highQualityFilter } from "../utils";
 import { getAnswersWithLength } from "@/api/analysis";
 import TimeLine from "@/components/TimeLine";
+import { line } from "d3";
 import dayjs from "dayjs";
 import * as echarts from "echarts";
 import * as ecStat from "echarts-stat";
@@ -90,9 +91,10 @@ export default {
       endDate: null,
       start: null,
       end: null,
-      answersWithLength: [],
-      displayedData: [],
-      lineData: [],
+      answersWithLength: [], // 后端返回的数据
+      displayedData: [], // 显示的数据，根据时间筛选
+      lineData: [], // 线图数据
+      groupSize: 100,
       chart: null,
       resizeTimeout: null,
       disabled: false,
@@ -168,6 +170,9 @@ export default {
         this.initLineChart();
       }
     },
+    filterSelfAnsweredData() {
+      return []
+    },
     filterLineData() {
       const MIN_GROUP_SIZE = 100; // 每组最小数量
       const MIN_GROUP_COUNT = 5; // 最小组数
@@ -189,6 +194,7 @@ export default {
         groupCount = MIN_GROUP_COUNT;
         groupSize = Math.ceil(this.displayedData.length / groupCount);
       }
+      this.groupSize = groupSize;
       
       const groupedResults = [];
       for (let i = 0; i < groupCount; i++) {
@@ -218,8 +224,8 @@ export default {
           ? group.filter((item) => item.isAccepted).length / group.length
           : 0;
 
-        // 获取该组的最大 length
-        const xAxis = group[group.length - 1]?.length || 0;
+        // 获取该组的平均 length
+        const xAxis = group.reduce((acc, item) => acc + item.length, 0) / group.length;
 
         groupedResults.push({
           highQualityRate,
@@ -318,10 +324,10 @@ export default {
         },
         xAxis: {
           type: "category", // 分类型 x 轴
-          name: "Answer Length (characters)",
+          name: `Answer Length (characters)\n${this.lineData.length} groups, ${this.groupSize} samples per group`,
           nameLocation: "middle",
           nameGap: 30,
-          data: this.lineData.map((item) => item.xAxis), // 设置分类
+          data: this.lineData.map((item) => item.xAxis.toFixed(2)), // 设置分类
         },
         yAxis: {
           type: "value",
@@ -335,7 +341,7 @@ export default {
             type: "scatter",
             data: (() => {
               return this.lineData.map((item) => ({
-                value: [item.xAxis.toString(), item.highQualityRate * 100],
+                value: [item.xAxis.toFixed(2).toString(), item.highQualityRate * 100],
                 itemStyle: { color: "#2ec7c9" },
                 symbolSize: 7,
                 ...item,
@@ -345,7 +351,7 @@ export default {
               formatter: (params) => {
                 const data = params.data;
                 return `
-                Answer Length: ${data.value[0]} s <br/>
+                Answer Length: ${data.value[0]} <br/>
                 High Quality Rate: ${data.value[1].toFixed(2)}% <br/>
                 Accepted Rate: ${data.acceptedRate.toFixed(2)} <br/>
                 Average Upvote: ${data.upVoteCount.toFixed(2)} <br/>
@@ -359,7 +365,7 @@ export default {
             type: "line",
             showSymbol: false,
             data: regression.points.map((item) => [
-              item[0].toString(),
+              item[0].toFixed(2).toString(),
               item[1],
             ]),
             lineStyle: {
@@ -375,7 +381,7 @@ export default {
             type: "line",
             showSymbol: false,
             data: accRegression.points.map((item) => [
-              item[0].toString(),
+              item[0].toFixed(2).toString(),
               item[1],
             ]),
             lineStyle: {

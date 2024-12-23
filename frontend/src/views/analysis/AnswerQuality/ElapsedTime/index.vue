@@ -123,6 +123,7 @@ export default {
       allAnswerData: [],
       displayedAllAnswerData: [],
       displayedLineData: [],
+      groupSize: 100,
       height: "300px",
       pieChart1: null,
       pieChart2: null,
@@ -276,8 +277,10 @@ export default {
         groupCount = MIN_GROUP_COUNT;
         groupSize = Math.ceil(this.displayedAllAnswerData.length / groupCount);
       }
+      this.groupSize = groupSize;
 
       const groupedResults = [];
+      const groupedSelfAnsweredResults = [];
       for (let i = 0; i < groupCount; i++) {
         const groupStart = i * groupSize;
         const groupEnd = Math.min(
@@ -308,12 +311,14 @@ export default {
           ? group.filter((item) => item.first).length / group.length
           : 0;
 
-        // 获取该组的最大 duration
-        const xAxis = group[group.length - 1]?.duration || 0;
+        // 获取该组的平均 duration
+        const xAxis =
+          group.reduce((acc, item) => acc + item.duration / 1000, 0) /
+          group.length;
 
         groupedResults.push({
           highQualityRate,
-          xAxis: xAxis / 1000,
+          xAxis: xAxis,
           upVoteCount,
           downVoteCount,
           acceptedRate,
@@ -454,10 +459,10 @@ export default {
         },
         xAxis: {
           type: "category", // 分类型 x 轴
-          name: "Elapsed Time (s)",
+          name: `Elapsed Time (s)\n${this.lineData.length} groups, ${this.groupSize} samples per group`,
           nameLocation: "middle",
           nameGap: 30,
-          data: this.lineData.map((item) => item.xAxis), // 设置分类
+          data: this.lineData.map((item) => item.xAxis.toFixed(2)), // 设置分类
         },
         yAxis: {
           type: "value",
@@ -471,7 +476,10 @@ export default {
             type: "scatter",
             data: (() => {
               return this.lineData.map((item) => ({
-                value: [item.xAxis.toString(), item.highQualityRate * 100],
+                value: [
+                  item.xAxis.toFixed(2).toString(),
+                  item.highQualityRate * 100,
+                ],
                 itemStyle: { color: "#2ec7c9" },
                 symbolSize: 7,
                 ...item,
@@ -496,7 +504,7 @@ export default {
             type: "line",
             showSymbol: false,
             data: regression.points.map((item) => [
-              item[0].toString(),
+              item[0].toFixed(2).toString(),
               item[1],
             ]),
             lineStyle: {
@@ -512,7 +520,7 @@ export default {
             type: "line",
             showSymbol: false,
             data: accRegression.points.map((item) => [
-              item[0].toString(),
+              item[0].toFixed(2).toString(),
               item[1],
             ]),
             lineStyle: {
@@ -528,7 +536,7 @@ export default {
             type: "line",
             showSymbol: false,
             data: firstRegression.points.map((item) => [
-              item[0].toString(),
+              item[0].toFixed(2).toString(),
               item[1],
             ]),
             lineStyle: {
@@ -1021,7 +1029,7 @@ export default {
 }
 
 .define-span {
-  margin-right: 30px;
+  margin-right: 40px;
   color: #3498db;
   cursor: pointer;
   transition: color 0.3s ease;
